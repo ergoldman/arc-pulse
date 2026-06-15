@@ -1,0 +1,32 @@
+name: ARC Occupancy Logger
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes
+  workflow_dispatch:           # lets you run it manually too
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run logger
+        run: python arc_logger.py --once
+
+      - name: Commit new data
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add arc_occupancy.csv
+          git commit -m "Log occupancy $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
+          git push
