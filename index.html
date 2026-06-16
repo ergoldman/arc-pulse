@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ARC Pulse — UC Davis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+  :root{
+    --ink:#10241b;--paper:#f3efe4;--paper2:#eae4d3;--gold:#d4a02a;--gold-deep:#b07d12;
+    --moss:#3f6b4f;--calm:#5b8c6e;--warn:#c8682f;--hot:#a8341f;--line:#cabfa3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  header{padding:34px 0 18px;border-bottom:1.5px solid var(--ink)}
+  .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .brand h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,6vw,58px);letter-spacing:-.02em;line-height:.95}
+  .brand .sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep)}
+  .tagline{margin-top:8px;font-size:15px;color:var(--moss);max-width:54ch}
+  .toggle{display:inline-flex;margin:22px 0 6px;border:1.5px solid var(--ink);border-radius:2px;overflow:hidden}
+  .toggle button{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:9px 18px;background:transparent;color:var(--ink);border:none;cursor:pointer;transition:.15s}
+  .toggle button.on{background:var(--ink);color:var(--paper)}
+  section{padding:30px 0}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::after{content:'';flex:1;height:1px;background:var(--line)}
+  .pulse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .pulse{background:var(--paper2);border:1.5px solid var(--ink);border-radius:3px;padding:22px}
+  .pulse h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin-bottom:2px}
+  .pulse .dow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);letter-spacing:.05em}
+  .ring-row{display:flex;align-items:center;gap:18px;margin-top:14px}
+  .ring{position:relative;width:104px;height:104px;flex-shrink:0}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .pct{font-family:'Fraunces',serif;font-weight:900;font-size:26px;line-height:1}
+  .ring .cap{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--moss);margin-top:2px}
+  .verdict .big{font-family:'Fraunces',serif;font-weight:600;font-size:18px;display:block;margin-bottom:3px}
+  .verdict .cnt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:2px;margin-top:8px}
+  .tag.calm{background:rgba(91,140,110,.18);color:#2f5a40}
+  .tag.norm{background:rgba(212,160,42,.18);color:var(--gold-deep)}
+  .tag.busy{background:rgba(168,52,31,.15);color:var(--hot)}
+  .best{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .chip{background:var(--ink);color:var(--paper);border-radius:2px;padding:8px 12px;min-width:96px}
+  .chip .t{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
+  .chip .p{font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace}
+  .heatwrap{overflow-x:auto;padding-bottom:6px}
+  table.heat{border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:10px}
+  table.heat th{font-weight:400;color:var(--moss);padding:3px 4px;text-align:center}
+  table.heat td{width:26px;height:22px;text-align:center;border:1px solid var(--paper)}
+  .zsel{display:inline-flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .zsel button{font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 12px;background:transparent;border:1.5px solid var(--ink);border-radius:2px;cursor:pointer;color:var(--ink)}
+  .zsel button.on{background:var(--gold);border-color:var(--gold-deep)}
+  .dept-stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+  .stat{border:1.5px solid var(--ink);border-radius:3px;padding:18px;background:var(--paper2)}
+  .stat .n{font-family:'Fraunces',serif;font-weight:900;font-size:32px;line-height:1}
+  .stat .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);margin-top:6px}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:140px;margin-top:8px}
+  .bars .b{flex:1;background:var(--moss);border-radius:1px 1px 0 0;min-height:2px}
+  .bars .b.peak{background:var(--hot)}
+  .axis{display:flex;gap:3px;margin-top:4px}
+  .axis span{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--moss)}
+  .hidden{display:none}
+  footer{border-top:1.5px solid var(--ink);padding:22px 0 50px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);line-height:1.7}
+  .status{font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 0;text-align:center;letter-spacing:.05em}
+  .status.loading{background:var(--gold);color:var(--ink)}
+  .status.ok{background:var(--calm);color:#fff}
+  .status.err{background:var(--hot);color:#fff}
+  .thin-note{background:var(--paper2);border:1px dashed var(--line);border-radius:3px;padding:14px;font-size:13px;color:var(--moss);margin-top:8px}
+  @media (prefers-reduced-motion:no-preference){.blink{animation:bl 2s ease-in-out infinite}@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}}
+</style>
+</head>
+<body>
+<div id="status" class="status loading">Loading live ARC data…</div>
+<header><div class="wrap">
+  <div class="brand"><h1>ARC Pulse</h1><span class="sub">UC Davis · live</span></div>
+  <p class="tagline">The official page shows the number. This tells you what it means — is it busy <em>right now for this day</em>, and when's the smart time to come.</p>
+  <div class="toggle">
+    <button id="t-student" class="on" onclick="setView('student')">For students</button>
+    <button id="t-dept" onclick="setView('dept')">For staff</button>
+  </div>
+</div></header>
+<main class="wrap">
+  <div id="view-student">
+    <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div class="pulse-grid" id="nowGrid"></div></section>
+    <section><div class="eyebrow">Best times to go this week</div><div id="bestZones"></div></section>
+    <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div></section>
+  </div>
+  <div id="view-dept" class="hidden">
+    <section><div class="eyebrow">Operations snapshot</div><div class="dept-stat" id="deptStats"></div></section>
+    <section><div class="eyebrow">Average load by hour — ARC Access</div><div class="bars" id="deptBars"></div><div class="axis" id="deptAxis"></div></section>
+  </div>
+</main>
+<footer><div class="wrap">
+  ARC Pulse · live public facility-occupancy data · aggregate counts only, no personal data<br/>
+  <span id="freshness"></span>
+</div></footer>
+<script>
+const CSV_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/main/arc_occupancy.csv";
+const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
+const HEATCOLOR=p=>p<8?"#eae4d3":p<20?"#e3d39a":p<35?"#d4a02a":p<55?"#c8682f":"#a8341f";
+
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  const head=lines[0].split(",");
+  return lines.slice(1).map(l=>{
+    const parts=l.split(",");const o={};head.forEach((h,i)=>o[h]=parts[i]);
+    const dt=new Date(o.timestamp);
+    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,
+            hour:dt.getHours(),dow:(dt.getDay()+6)%7,dt};   // dow: 0=Mon
+  }).filter(r=>r.name&&!isNaN(r.pct));
+}
+
+function analyze(rows){
+  const zones={};
+  rows.forEach(r=>{(zones[r.name]=zones[r.name]||[]).push(r);});
+  const out={};
+  for(const [name,rs] of Object.entries(zones)){
+    rs.sort((a,b)=>a.dt-b.dt);
+    const max=rs[rs.length-1].max;
+    // cell averages by (dow,hour)
+    const cell={},hourly={};
+    rs.forEach(r=>{
+      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
+      (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);
+    });
+    const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+    const latest=rs[rs.length-1];
+    const slot=cell[latest.dow+"-"+latest.hour]||[latest.pct];
+    const normal=avg(slot);
+    const sd=slot.length>1?Math.sqrt(avg(slot.map(x=>(x-normal)**2))):1;
+    const z=sd?(latest.pct-normal)/sd:0;
+    const verdict=z<-0.6?"quieter than usual":z>0.6?"busier than usual":"about normal";
+    // typical hourly curve
+    const typical=Object.keys(hourly).map(h=>({h:+h,pct:avg(hourly[h])})).sort((a,b)=>a.h-b.h);
+    // best time per day (workout hours 7-20)
+    const best=[];
+    for(let d=0;d<7;d++){
+      let bh=null,bp=999;
+      for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}
+      if(bh!==null)best.push({d,h:bh,pct:bp});
+    }
+    // heatmap cells
+    const heat=[];
+    for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
+    out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},
+               typical,best,heat,nReadings:rs.length,lastDT:latest.dt};
+  }
+  return out;
+}
+
+function ring(pct){
+  const r=44,c=2*Math.PI*r,off=c*(1-pct/100);
+  const col=pct<25?"var(--calm)":pct<55?"var(--gold)":"var(--hot)";
+  return `<div class="ring"><svg width="104" height="104">
+    <circle cx="52" cy="52" r="${r}" fill="none" stroke="#d8cdb2" stroke-width="9"/>
+    <circle cx="52" cy="52" r="${r}" fill="none" stroke="${col}" stroke-width="9"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round"/>
+  </svg><div class="mid"><span class="pct">${Math.round(pct)}%</span><span class="cap">full</span></div></div>`;
+}
+
+let DATA={};
+function renderNow(){
+  const g=document.getElementById("nowGrid");g.innerHTML="";
+  for(const [name,z] of Object.entries(DATA)){
+    const n=z.now;
+    const tc=n.verdict.includes("quiet")?"calm":n.verdict.includes("busy")?"busy":"norm";
+    g.innerHTML+=`<div class="pulse"><h3>${name}</h3>
+      <div class="dow">${DOWFULL[n.dow]} · ${fmtH(n.hour)} now</div>
+      <div class="ring-row">${ring(n.pct)}
+        <div class="verdict"><span class="big">${n.verdict}</span>
+        <span class="cnt">${n.cur} of ${z.max} · usually ~${Math.round(n.normal)}%</span><br>
+        <span class="tag ${tc}">${n.verdict}</span></div></div></div>`;
+  }
+}
+function renderBest(){
+  const w=document.getElementById("bestZones");w.innerHTML="";
+  for(const [name,z] of Object.entries(DATA)){
+    if(!z.best.length){w.innerHTML+=`<div class="thin-note">Not enough data yet for ${name} — fills in as readings accumulate.</div>`;continue;}
+    const chips=z.best.map(b=>`<div class="chip"><div class="t">${DOW[b.d]} ${fmtH(b.h)}</div><div class="p">~${Math.round(b.pct)}% full</div></div>`).join("");
+    w.innerHTML+=`<div style="margin-bottom:16px"><div style="font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin-bottom:8px">${name}</div><div class="best">${chips}</div></div>`;
+  }
+}
+let heatZone=null;
+function renderHeatSel(){
+  const s=document.getElementById("heatSel");s.innerHTML="";
+  if(!heatZone)heatZone=Object.keys(DATA)[0];
+  Object.keys(DATA).forEach(n=>{s.innerHTML+=`<button class="${n===heatZone?'on':''}" onclick="heatZone='${n}';renderHeatSel();renderHeat()">${n}</button>`;});
+}
+function renderHeat(){
+  const z=DATA[heatZone];if(!z)return;
+  const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
+  let h='<table class="heat"><tr><th></th>';
+  for(let hr=6;hr<24;hr++)h+=`<th>${fmtH(hr)}</th>`;h+="</tr>";
+  for(let d=0;d<7;d++){h+=`<tr><th style="text-align:right;padding-right:8px">${DOW[d]}</th>`;
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f3efe4":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#10241b");
+      h+=`<td style="background:${c};color:${t}" title="${DOW[d]} ${fmtH(hr)}: ${p==null?'—':Math.round(p)+'%'}">${p==null?'':Math.round(p)}</td>`;}
+    h+="</tr>";}
+  h+="</table>";document.getElementById("heat").innerHTML=h;
+}
+function renderDept(){
+  const z=DATA["ARC Access"]||Object.values(DATA)[0];if(!z)return;
+  const peak=Math.max(...z.typical.map(t=>t.pct),1);
+  const peakH=z.typical.find(t=>t.pct===peak)||{h:0};
+  const avg=(z.typical.reduce((a,b)=>a+b.pct,0)/Math.max(z.typical.length,1)).toFixed(1);
+  document.getElementById("deptStats").innerHTML=`
+    <div class="stat"><div class="n">${fmtH(peakH.h)}</div><div class="l">Daily peak hour</div></div>
+    <div class="stat"><div class="n">${Math.round(peak)}%</div><div class="l">Peak load</div></div>
+    <div class="stat"><div class="n">${avg}%</div><div class="l">Avg open-hours load</div></div>
+    <div class="stat"><div class="n">${z.nReadings}</div><div class="l">Readings collected</div></div>`;
+  const bars=document.getElementById("deptBars"),ax=document.getElementById("deptAxis");
+  bars.innerHTML="";ax.innerHTML="";
+  z.typical.forEach(t=>{bars.innerHTML+=`<div class="b ${t.pct>=peak*0.8?'peak':''}" style="height:${Math.max(2,t.pct/peak*100)}%" title="${fmtH(t.h)}: ${Math.round(t.pct)}%"></div>`;
+    ax.innerHTML+=`<span>${t.h%3===0?fmtH(t.h):''}</span>`;});
+}
+function setView(v){
+  document.getElementById("view-student").classList.toggle("hidden",v!=="student");
+  document.getElementById("view-dept").classList.toggle("hidden",v!=="dept");
+  document.getElementById("t-student").classList.toggle("on",v==="student");
+  document.getElementById("t-dept").classList.toggle("on",v==="dept");
+}
+function renderAll(){renderNow();renderBest();renderHeatSel();renderHeat();renderDept();}
+
+fetch(CSV_URL+"?t="+Date.now())
+  .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
+  .then(text=>{
+    const rows=parseCSV(text);
+    if(!rows.length)throw new Error("No data rows yet");
+    DATA=analyze(rows);
+    renderAll();
+    const st=document.getElementById("status");
+    st.className="status ok";st.textContent="Live · "+rows.length+" readings";
+    setTimeout(()=>st.style.display="none",2500);
+    const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
+    document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString();
+  })
+  .catch(e=>{
+    const st=document.getElementById("status");
+    st.className="status err";
+    st.textContent="Couldn't load data ("+e.message+"). If the logger just started, check back soon.";
+  });
+</script>
+</body></html>
