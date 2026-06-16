@@ -40,6 +40,20 @@
   .tag.calm{background:rgba(91,140,110,.18);color:#2f5a40}
   .tag.norm{background:rgba(212,160,42,.18);color:var(--gold-deep)}
   .tag.busy{background:rgba(168,52,31,.15);color:var(--hot)}
+  /* forecast section */
+  .fc-zone{margin-bottom:26px}
+  .fc-zone h3{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin-bottom:4px}
+  .fc-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);margin-bottom:12px}
+  .fc-row{display:flex;gap:4px;align-items:flex-end;overflow-x:auto;padding-bottom:6px}
+  .fc-bar-wrap{display:flex;flex-direction:column;align-items:center;min-width:46px;flex:1}
+  .fc-bar-track{width:100%;height:120px;display:flex;align-items:flex-end;border-bottom:1.5px solid var(--ink)}
+  .fc-bar{width:100%;border-radius:2px 2px 0 0;transition:height .3s}
+  .fc-pct{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;margin-bottom:3px}
+  .fc-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--moss);margin-top:5px}
+  .fc-band{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--line)}
+  .fc-legend{display:flex;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--moss);margin-top:4px}
+  .fc-legend span{display:inline-flex;align-items:center;gap:5px}
+  .fc-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
   .best{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
   .chip{background:var(--ink);color:var(--paper);border-radius:2px;padding:8px 12px;min-width:96px}
   .chip .t{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
@@ -61,12 +75,12 @@
   .axis{display:flex;gap:3px;margin-top:4px}
   .axis span{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--moss)}
   .hidden{display:none}
+  .thin-note{background:var(--paper2);border:1px dashed var(--line);border-radius:3px;padding:14px;font-size:13px;color:var(--moss);margin-top:8px}
   footer{border-top:1.5px solid var(--ink);padding:22px 0 50px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);line-height:1.7}
   .status{font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 0;text-align:center;letter-spacing:.05em}
   .status.loading{background:var(--gold);color:var(--ink)}
   .status.ok{background:var(--calm);color:#fff}
   .status.err{background:var(--hot);color:#fff}
-  .thin-note{background:var(--paper2);border:1px dashed var(--line);border-radius:3px;padding:14px;font-size:13px;color:var(--moss);margin-top:8px}
   @media (prefers-reduced-motion:no-preference){.blink{animation:bl 2s ease-in-out infinite}@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}}
 </style>
 </head>
@@ -74,7 +88,7 @@
 <div id="status" class="status loading">Loading live ARC data…</div>
 <header><div class="wrap">
   <div class="brand"><h1>ARC Pulse</h1><span class="sub">UC Davis · live</span></div>
-  <p class="tagline">The official page shows the number. This tells you what it means — is it busy <em>right now for this day</em>, and when's the smart time to come.</p>
+  <p class="tagline">The official page shows the number. This tells you what it means — is it busy <em>right now for this day</em>, what's coming later, and when's the smart time to go.</p>
   <div class="toggle">
     <button id="t-student" class="on" onclick="setView('student')">For students</button>
     <button id="t-dept" onclick="setView('dept')">For staff</button>
@@ -83,6 +97,14 @@
 <main class="wrap">
   <div id="view-student">
     <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div class="pulse-grid" id="nowGrid"></div></section>
+    <section><div class="eyebrow">Today's forecast — hour by hour</div><div id="forecast"></div>
+      <div class="fc-legend">
+        <span><span class="fc-dot" style="background:var(--calm)"></span>quiet</span>
+        <span><span class="fc-dot" style="background:var(--gold)"></span>moderate</span>
+        <span><span class="fc-dot" style="background:var(--warn)"></span>busy</span>
+        <span><span class="fc-dot" style="background:var(--hot)"></span>packed</span>
+      </div>
+    </section>
     <section><div class="eyebrow">Best times to go this week</div><div id="bestZones"></div></section>
     <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div></section>
   </div>
@@ -93,7 +115,7 @@
 </main>
 <footer><div class="wrap">
   ARC Pulse · live public facility-occupancy data · aggregate counts only, no personal data<br/>
-  <span id="freshness"></span>
+  <span id="freshness"></span> · Forecast = average for this weekday &amp; hour from collected history.
 </div></footer>
 <script>
 const CSV_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/main/arc_occupancy.csv";
@@ -101,6 +123,8 @@ const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
 const HEATCOLOR=p=>p<8?"#eae4d3":p<20?"#e3d39a":p<35?"#d4a02a":p<55?"#c8682f":"#a8341f";
+const LOADCOLOR=p=>p<25?"#5b8c6e":p<50?"#d4a02a":p<75?"#c8682f":"#a8341f";
+const loadLabel=p=>p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
 
 function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);
@@ -109,7 +133,7 @@ function parseCSV(text){
     const parts=l.split(",");const o={};head.forEach((h,i)=>o[h]=parts[i]);
     const dt=new Date(o.timestamp);
     return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,
-            hour:dt.getHours(),dow:(dt.getDay()+6)%7,dt};   // dow: 0=Mon
+            hour:dt.getHours(),dow:(dt.getDay()+6)%7,dt};
   }).filter(r=>r.name&&!isNaN(r.pct));
 }
 
@@ -120,33 +144,32 @@ function analyze(rows){
   for(const [name,rs] of Object.entries(zones)){
     rs.sort((a,b)=>a.dt-b.dt);
     const max=rs[rs.length-1].max;
-    // cell averages by (dow,hour)
     const cell={},hourly={};
     rs.forEach(r=>{
       (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
       (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);
     });
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+    const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
     const latest=rs[rs.length-1];
     const slot=cell[latest.dow+"-"+latest.hour]||[latest.pct];
     const normal=avg(slot);
-    const sd=slot.length>1?Math.sqrt(avg(slot.map(x=>(x-normal)**2))):1;
+    const sd=slot.length>1?std(slot):1;
     const z=sd?(latest.pct-normal)/sd:0;
     const verdict=z<-0.6?"quieter than usual":z>0.6?"busier than usual":"about normal";
-    // typical hourly curve
     const typical=Object.keys(hourly).map(h=>({h:+h,pct:avg(hourly[h])})).sort((a,b)=>a.h-b.h);
-    // best time per day (workout hours 7-20)
     const best=[];
-    for(let d=0;d<7;d++){
-      let bh=null,bp=999;
-      for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}
-      if(bh!==null)best.push({d,h:bh,pct:bp});
-    }
-    // heatmap cells
+    for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
     const heat=[];
     for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
+    // FORECAST: for today's dow, predicted pct per hour from now on, with band
+    const fc=[];
+    for(let h=latest.hour;h<24;h++){
+      const c=cell[latest.dow+"-"+h];
+      if(c){const m=avg(c),s=std(c);fc.push({h,pct:m,lo:Math.max(0,m-s),hi:Math.min(100,m+s)});}
+    }
     out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},
-               typical,best,heat,nReadings:rs.length,lastDT:latest.dt};
+               typical,best,heat,forecast:fc,nReadings:rs.length,lastDT:latest.dt};
   }
   return out;
 }
@@ -175,10 +198,26 @@ function renderNow(){
         <span class="tag ${tc}">${n.verdict}</span></div></div></div>`;
   }
 }
+function renderForecast(){
+  const wrap=document.getElementById("forecast");wrap.innerHTML="";
+  for(const [name,z] of Object.entries(DATA)){
+    if(!z.forecast||z.forecast.length<2){wrap.innerHTML+=`<div class="thin-note">Not enough data yet to forecast ${name} — fills in as readings accumulate.</div>`;continue;}
+    let bars="";
+    z.forecast.forEach(f=>{
+      bars+=`<div class="fc-bar-wrap" title="${fmtH(f.h)}: ${Math.round(f.pct)}% (range ${Math.round(f.lo)}-${Math.round(f.hi)}%)">
+        <div class="fc-pct">${Math.round(f.pct)}%</div>
+        <div class="fc-bar-track"><div class="fc-bar" style="height:${Math.max(2,f.pct)}%;background:${LOADCOLOR(f.pct)}"></div></div>
+        <div class="fc-time">${fmtH(f.h)}</div></div>`;
+    });
+    wrap.innerHTML+=`<div class="fc-zone"><h3>${name}</h3>
+      <div class="fc-sub">predicted for the rest of ${DOWFULL[z.now.dow]}</div>
+      <div class="fc-row">${bars}</div></div>`;
+  }
+}
 function renderBest(){
   const w=document.getElementById("bestZones");w.innerHTML="";
   for(const [name,z] of Object.entries(DATA)){
-    if(!z.best.length){w.innerHTML+=`<div class="thin-note">Not enough data yet for ${name} — fills in as readings accumulate.</div>`;continue;}
+    if(!z.best.length){w.innerHTML+=`<div class="thin-note">Not enough data yet for ${name}.</div>`;continue;}
     const chips=z.best.map(b=>`<div class="chip"><div class="t">${DOW[b.d]} ${fmtH(b.h)}</div><div class="p">~${Math.round(b.pct)}% full</div></div>`).join("");
     w.innerHTML+=`<div style="margin-bottom:16px"><div style="font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin-bottom:8px">${name}</div><div class="best">${chips}</div></div>`;
   }
@@ -221,24 +260,21 @@ function setView(v){
   document.getElementById("t-student").classList.toggle("on",v==="student");
   document.getElementById("t-dept").classList.toggle("on",v==="dept");
 }
-function renderAll(){renderNow();renderBest();renderHeatSel();renderHeat();renderDept();}
+function renderAll(){renderNow();renderForecast();renderBest();renderHeatSel();renderHeat();renderDept();}
 
 fetch(CSV_URL+"?t="+Date.now())
   .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
   .then(text=>{
     const rows=parseCSV(text);
     if(!rows.length)throw new Error("No data rows yet");
-    DATA=analyze(rows);
-    renderAll();
-    const st=document.getElementById("status");
-    st.className="status ok";st.textContent="Live · "+rows.length+" readings";
+    DATA=analyze(rows);renderAll();
+    const st=document.getElementById("status");st.className="status ok";st.textContent="Live · "+rows.length+" readings";
     setTimeout(()=>st.style.display="none",2500);
     const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
     document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString();
   })
   .catch(e=>{
-    const st=document.getElementById("status");
-    st.className="status err";
+    const st=document.getElementById("status");st.className="status err";
     st.textContent="Couldn't load data ("+e.message+"). If the logger just started, check back soon.";
   });
 </script>
