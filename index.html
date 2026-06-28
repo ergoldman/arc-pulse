@@ -126,6 +126,23 @@ const HEATCOLOR=p=>p<8?"#eae4d3":p<20?"#e3d39a":p<35?"#d4a02a":p<55?"#c8682f":"#
 const LOADCOLOR=p=>p<25?"#5b8c6e":p<50?"#d4a02a":p<75?"#c8682f":"#a8341f";
 const loadLabel=p=>p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
 
+// ---- OPEN HOURS FILTER ----------------------------------------------------
+// Readings logged while the ARC is closed are garbage (the feed reports stray
+// counts at 3-4am, etc.). We exclude anything outside open hours from all
+// PATTERN analysis (peak hour, hourly chart, heatmap, forecast, best-times).
+// Window is deliberately wide so it covers BOTH summer and academic-year hours
+// and never breaks when the season changes. dow: 0=Mon ... 6=Sun.
+//   Weekdays open ~5am-midnight (academic) / 6am-10pm (summer) -> use 5..23
+//   Weekends open ~8am-11pm (academic) / 9am-9pm (summer)      -> use 8..23
+// To change hours later, edit these two lines only:
+const OPEN_WEEKDAY = {start: 5, end: 23};   // Mon-Fri inclusive hours
+const OPEN_WEEKEND = {start: 8, end: 23};   // Sat-Sun inclusive hours
+function isOpenHour(dow, hour){
+  const w = (dow >= 5) ? OPEN_WEEKEND : OPEN_WEEKDAY;  // 5=Sat,6=Sun
+  return hour >= w.start && hour <= w.end;
+}
+// ---------------------------------------------------------------------------
+
 function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);
   const head=lines[0].split(",");
@@ -144,8 +161,9 @@ function analyze(rows){
   for(const [name,rs] of Object.entries(zones)){
     rs.sort((a,b)=>a.dt-b.dt);
     const max=rs[rs.length-1].max;
+    // Pattern tables use ONLY open-hours readings (closed-hour data is garbage).
     const cell={},hourly={};
-    rs.forEach(r=>{
+    rs.filter(r=>isOpenHour(r.dow,r.hour)).forEach(r=>{
       (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
       (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);
     });
