@@ -139,9 +139,15 @@ function parseCSV(text){
   const head=lines[0].split(",");
   return lines.slice(1).map(l=>{
     const parts=l.split(",");const o={};head.forEach((h,i)=>o[h]=parts[i]);
-    const dt=new Date(o.timestamp);
+    // The logger runs on GitHub Actions (UTC) and writes a timestamp with no
+    // timezone marker, e.g. "2026-07-02T15:39:38". Left alone, the browser
+    // reads it in the viewer's local zone, which is wrong. We force UTC by
+    // appending "Z", then read the hour/day in Pacific (America/Los_Angeles)
+    // so every reading lands in the correct Davis-time hour bucket.
+    const dtUTC = new Date(o.timestamp + "Z");
+    const pac = new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
     return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,
-            hour:dt.getHours(),dow:(dt.getDay()+6)%7,dt};
+            hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC,dtLocal:pac};
   }).filter(r=>r.name&&!isNaN(r.pct));
 }
 
@@ -259,7 +265,8 @@ fetch(CSV_URL+"?t="+Date.now())
     const st=document.getElementById("status");st.className="status ok";st.textContent="Live · "+rows.length+" readings";
     setTimeout(()=>st.style.display="none",2500);
     const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
-    document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString();
+    document.getElementById("freshness").textContent="Latest reading: "+
+      new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
   })
   .catch(e=>{
     const st=document.getElementById("status");st.className="status err";
