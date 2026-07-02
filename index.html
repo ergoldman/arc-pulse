@@ -109,7 +109,7 @@
   <span id="freshness"></span> · Forecast = average for this weekday &amp; hour from collected history.
 </div></footer>
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/main/arc_occupancy.csv";
+const CSV_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv";
 const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
@@ -118,7 +118,6 @@ const LOADCOLOR=p=>p<25?"#5b8c6e":p<50?"#d4a02a":p<75?"#c8682f":"#a8341f";
 const loadLabel=p=>p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
 
 // ---- OPEN HOURS FILTER ----------------------------------------------------
-  
 // Readings logged while the ARC is closed are garbage (the feed reports stray
 // counts at 3-4am, etc.). We exclude anything outside open hours from all
 // PATTERN analysis (peak hour, hourly chart, heatmap, forecast, best-times).
@@ -274,4 +273,4 @@ fetch(CSV_URL+"?t="+Date.now())
     st.textContent="Couldn't load data ("+e.message+"). If the logger just started, check back soon.";
   });
 </script>
-</body></html>  
+</body></html>
