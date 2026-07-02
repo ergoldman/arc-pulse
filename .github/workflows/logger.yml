@@ -1,10 +1,9 @@
 name: ARC Occupancy Logger
 on:
   schedule:
-    - cron: "*/15 * * * *"   # every 15 minutes
-  workflow_dispatch:           # lets you run it manually too
+    - cron: "*/30 * * * *"   # every 30 minutes
+  workflow_dispatch:
 
-# Give the workflow permission to push to the repo
 permissions:
   contents: write
 
@@ -12,8 +11,17 @@ jobs:
   log:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repo (main)
+      - name: Check out the data branch
         uses: actions/checkout@v4
+        with:
+          ref: data           # check out data branch directly
+          fetch-depth: 0
+
+      - name: Create data branch if it doesn't exist
+        run: |
+          # If 'data' didn't exist, checkout above may have failed to get it;
+          # ensure we're on a data branch based on main's files.
+          git rev-parse --verify data >/dev/null 2>&1 || git checkout -b data
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,25 +31,19 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
+      - name: Ensure logger script present
+        run: |
+          # arc_logger.py lives on main; fetch just that file onto this branch.
+          git fetch origin main
+          git checkout origin/main -- arc_logger.py
+
       - name: Run logger
         run: python arc_logger.py --once
 
-      # Commit the CSV to a SEPARATE 'data' branch so it does NOT trigger
-      # a GitHub Pages deploy (Pages only deploys from main). This keeps the
-      # site deploy stable while data updates every 15 min on its own branch.
-      - name: Commit new data to data branch
+      - name: Commit new data
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          # Fetch or create the data branch
-          git fetch origin data || true
-          if git show-ref --verify --quiet refs/remotes/origin/data; then
-            git checkout -B data origin/data
-            # bring over the freshly written csv from the main checkout
-            git checkout main -- arc_occupancy.csv 2>/dev/null || true
-          else
-            git checkout -B data
-          fi
           git add arc_occupancy.csv
           git commit -m "Log occupancy $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
-          git push origin data
+          git push origin HEAD:data
