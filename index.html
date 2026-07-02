@@ -59,6 +59,10 @@
   .chip .t{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
   .chip .p{font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace}
   .heatwrap{overflow-x:auto;padding-bottom:6px}
+  .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
+  .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
+  .heat-legend .hl-label{letter-spacing:.05em}
+  .heat-legend .hl-note{color:var(--line);margin-left:4px}
   table.heat{border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:10px}
   table.heat th{font-weight:400;color:var(--moss);padding:3px 4px;text-align:center}
   table.heat td{width:26px;height:22px;text-align:center;border:1px solid var(--paper)}
@@ -92,7 +96,18 @@
 <main class="wrap">
   <div id="view-student">
     <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div class="pulse-grid" id="nowGrid"></div></section>
-    <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div></section>
+    <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div>
+      <div class="heat-legend">
+        <span class="hl-label">Quieter</span>
+        <span class="hl-swatch" style="background:#eae4d3"></span>
+        <span class="hl-swatch" style="background:#e3d39a"></span>
+        <span class="hl-swatch" style="background:#d4a02a"></span>
+        <span class="hl-swatch" style="background:#c8682f"></span>
+        <span class="hl-swatch" style="background:#a8341f"></span>
+        <span class="hl-label">Busier</span>
+        <span class="hl-note">· numbers show % full · blank = no data collected yet</span>
+      </div>
+    </section>
     <section><div class="eyebrow">Today's forecast — hour by hour</div><div id="forecast"></div>
       <div class="fc-legend">
         <span><span class="fc-dot" style="background:var(--calm)"></span>quiet</span>
