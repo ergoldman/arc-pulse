@@ -163,7 +163,9 @@ function parseCSV(text){
     const pac = new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
     return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,
             hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC,dtLocal:pac};
-  }).filter(r=>r.name&&!isNaN(r.pct));
+  }).filter(r=>r.name&&!isNaN(r.pct)&&r.name!=="Rock Wall");
+  // Rock Wall is excluded: its occupancy feed isn't actively tracked
+  // (reports a constant value), so it isn't meaningful to display.
 }
 
 function analyze(rows){
