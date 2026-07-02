@@ -88,15 +88,11 @@
 <div id="status" class="status loading">Loading live ARC data…</div>
 <header><div class="wrap">
   <div class="brand"><h1>ARC Pulse</h1><span class="sub">UC Davis · live</span></div>
-  <p class="tagline">The official page shows the number. This tells you what it means — is it busy <em>right now for this day</em>, what's coming later, and when's the smart time to go.</p>
-  <div class="toggle">
-    <button id="t-student" class="on" onclick="setView('student')">For students</button>
-    <button id="t-dept" onclick="setView('dept')">For staff</button>
-  </div>
 </div></header>
 <main class="wrap">
   <div id="view-student">
     <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div class="pulse-grid" id="nowGrid"></div></section>
+    <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div></section>
     <section><div class="eyebrow">Today's forecast — hour by hour</div><div id="forecast"></div>
       <div class="fc-legend">
         <span><span class="fc-dot" style="background:var(--calm)"></span>quiet</span>
@@ -106,11 +102,6 @@
       </div>
     </section>
     <section><div class="eyebrow">Best times to go this week</div><div id="bestZones"></div></section>
-    <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div></section>
-  </div>
-  <div id="view-dept" class="hidden">
-    <section><div class="eyebrow">Operations snapshot</div><div class="dept-stat" id="deptStats"></div></section>
-    <section><div class="eyebrow">Average load by hour — ARC Access</div><div class="bars" id="deptBars"></div><div class="axis" id="deptAxis"></div></section>
   </div>
 </main>
 <footer><div class="wrap">
@@ -257,28 +248,7 @@ function renderHeat(){
     h+="</tr>";}
   h+="</table>";document.getElementById("heat").innerHTML=h;
 }
-function renderDept(){
-  const z=DATA["ARC Access"]||Object.values(DATA)[0];if(!z)return;
-  const peak=Math.max(...z.typical.map(t=>t.pct),1);
-  const peakH=z.typical.find(t=>t.pct===peak)||{h:0};
-  const avg=(z.typical.reduce((a,b)=>a+b.pct,0)/Math.max(z.typical.length,1)).toFixed(1);
-  document.getElementById("deptStats").innerHTML=`
-    <div class="stat"><div class="n">${fmtH(peakH.h)}</div><div class="l">Daily peak hour</div></div>
-    <div class="stat"><div class="n">${Math.round(peak)}%</div><div class="l">Peak load</div></div>
-    <div class="stat"><div class="n">${avg}%</div><div class="l">Avg open-hours load</div></div>
-    <div class="stat"><div class="n">${z.nReadings}</div><div class="l">Readings collected</div></div>`;
-  const bars=document.getElementById("deptBars"),ax=document.getElementById("deptAxis");
-  bars.innerHTML="";ax.innerHTML="";
-  z.typical.forEach(t=>{bars.innerHTML+=`<div class="b ${t.pct>=peak*0.8?'peak':''}" style="height:${Math.max(2,t.pct/peak*100)}%" title="${fmtH(t.h)}: ${Math.round(t.pct)}%"></div>`;
-    ax.innerHTML+=`<span>${t.h%3===0?fmtH(t.h):''}</span>`;});
-}
-function setView(v){
-  document.getElementById("view-student").classList.toggle("hidden",v!=="student");
-  document.getElementById("view-dept").classList.toggle("hidden",v!=="dept");
-  document.getElementById("t-student").classList.toggle("on",v==="student");
-  document.getElementById("t-dept").classList.toggle("on",v==="dept");
-}
-function renderAll(){renderNow();renderForecast();renderBest();renderHeatSel();renderHeat();renderDept();}
+function renderAll(){renderNow();renderForecast();renderBest();renderHeatSel();renderHeat();}
 
 fetch(CSV_URL+"?t="+Date.now())
   .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
