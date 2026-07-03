@@ -1,0 +1,25 @@
+{
+  "status": "partial",
+  "updated": "2026-07-03T18:42:17Z",
+  "regular": {
+    "weekday": {
+      "open": "05:00",
+      "close": "24:00"
+    },
+    "weekend": {
+      "open": "08:00",
+      "close": "23:00"
+    }
+  },
+  "summer": {
+    "weekday": {
+      "open": "06:00",
+      "close": "22:00"
+    },
+    "weekend": {
+      "open": "09:00",
+      "close": "21:00"
+    }
+  },
+  "special": {}
+}
