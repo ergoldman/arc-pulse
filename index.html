@@ -59,6 +59,15 @@
   .chip .t{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
   .chip .p{font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace}
   .heatwrap{overflow-x:auto;padding-bottom:6px}
+  /* hours banner */
+  #hoursBanner{margin:24px 0 0}
+  .hours-card{border:1.5px solid var(--ink);border-radius:3px;padding:16px 18px;background:var(--paper2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .hours-status{font-family:'Fraunces',serif;font-weight:900;font-size:22px;line-height:1}
+  .hours-status.open{color:#2f5a40}
+  .hours-status.closed{color:var(--hot)}
+  .hours-detail{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--moss);letter-spacing:.03em}
+  .hours-warn{margin-top:10px;border-left:3px solid var(--gold-deep);background:rgba(212,160,42,.12);padding:8px 12px;font-size:13px;color:var(--gold-deep);border-radius:0 3px 3px 0}
+  .hours-warn.closing{border-left-color:var(--hot);background:rgba(168,52,31,.1);color:var(--hot)}
   .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
   .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
   .heat-legend .hl-label{letter-spacing:.05em}
@@ -94,6 +103,7 @@
   <div class="brand"><h1>ARC Pulse</h1><span class="sub">UC Davis · live</span></div>
 </div></header>
 <main class="wrap">
+  <div id="hoursBanner"></div>
   <div id="view-student">
     <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div class="pulse-grid" id="nowGrid"></div></section>
     <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div>
@@ -272,6 +282,78 @@ function renderHeat(){
   h+="</table>";document.getElementById("heat").innerHTML=h;
 }
 function renderAll(){renderNow();renderForecast();renderBest();renderHeatSel();renderHeat();}
+
+// ---- HOURS FEATURE --------------------------------------------------------
+const HOURS_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json";
+const MONTHNAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function pacificNow(){
+  // current date/time in Pacific
+  return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
+}
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function isSummer(d){
+  // Summer hours mid-June to ~late Sept (approx; special dates override anyway)
+  const m=d.getMonth()+1; return (m>6&&m<9)||(m===6&&d.getDate()>=15)||(m===9&&d.getDate()<22);
+}
+function hoursForDay(H,d){
+  const key=dateKey(d);
+  if(H.special&&H.special[key])return H.special[key];              // special day wins
+  const weekend=(d.getDay()===0||d.getDay()===6);
+  const set=isSummer(d)?H.summer:H.regular;
+  return weekend?set.weekend:set.weekday;
+}
+function fmtClock(hhmm){
+  if(!hhmm)return"";let[h,m]=hhmm.split(":").map(Number);
+  const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;
+  return m===0?`${hr}${ap}`:`${hr}:${String(m).padStart(2,'0')}${ap}`;
+}
+function renderHours(H){
+  const el=document.getElementById("hoursBanner");
+  const now=pacificNow();
+  const today=hoursForDay(H,now);
+  let html='<div class="hours-card">';
+  if(today.closed){
+    html+=`<span class="hours-status closed">Closed today</span>
+           <span class="hours-detail">The ARC is closed today.</span>`;
+  }else{
+    // open/closed right now
+    const mins=now.getHours()*60+now.getMinutes();
+    const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
+    let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];
+    if(today.close==="24:00")closeM=24*60;
+    const isOpen=mins>=openM&&mins<closeM;
+    html+=`<span class="hours-status ${isOpen?'open':'closed'}">${isOpen?'Open now':'Closed now'}</span>
+           <span class="hours-detail">Today: ${fmtClock(today.open)} – ${fmtClock(today.close)}</span>`;
+    // closing-soon warning (within 60 min)
+    if(isOpen && closeM-mins<=60){
+      html+=`</div><div class="hours-warn closing">Closing soon — ${fmtClock(today.close)} today.</div>`;
+      document.getElementById("hoursBanner").innerHTML=html;return;
+    }
+  }
+  html+='</div>';
+  // Advance warning: scan next 7 days for special/closed days
+  const warns=[];
+  for(let i=1;i<=7;i++){
+    const d=new Date(now);d.setDate(now.getDate()+i);
+    const key=dateKey(d);
+    if(H.special&&H.special[key]){
+      const s=H.special[key];
+      const label=`${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]} ${MONTHNAMES[d.getMonth()]} ${d.getDate()}`;
+      if(s.closed)warns.push(`<b>${label}:</b> ARC closed`);
+      else warns.push(`<b>${label}:</b> special hours ${fmtClock(s.open)}–${fmtClock(s.close)}`);
+    }
+  }
+  if(warns.length){
+    html+=`<div class="hours-warn">Heads up · ${warns.slice(0,3).join(" &nbsp;·&nbsp; ")}</div>`;
+  }
+  el.innerHTML=html;
+}
+fetch(HOURS_URL+"?t="+Date.now())
+  .then(r=>r.ok?r.json():null)
+  .then(H=>{ if(H&&(H.status==="ok"||H.status==="partial")) renderHours(H); })
+  .catch(()=>{ /* hours unavailable — silently skip, site still works */ });
+// ---------------------------------------------------------------------------
+
 
 fetch(CSV_URL+"?t="+Date.now())
   .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
