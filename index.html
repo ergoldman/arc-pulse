@@ -26,6 +26,8 @@
   .brand .logo span{color:var(--ink)}
   .brand .live{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--calm);display:flex;align-items:center;gap:6px;font-weight:600}
   .brand .live .dot{width:7px;height:7px;border-radius:50%;background:var(--calm)}
+  .notify-btn{font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;background:var(--card);border:1px solid var(--line);border-radius:100px;padding:7px 14px;cursor:pointer;color:var(--ink)}
+  .notify-btn.on{background:var(--blue-d);color:#fff;border-color:var(--blue-d)}
   .tabs{display:flex;gap:4px;margin-top:16px}
   .tabs button{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;padding:10px 20px;background:transparent;color:var(--sub);border:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:.15s;border-radius:6px 6px 0 0}
   .tabs button.on{color:var(--blue-d);border-bottom-color:var(--blue-d);background:rgba(20,73,168,.05)}
@@ -106,6 +108,7 @@
   <div class="brand">
     <span class="logo">ARC <span>Pulse</span></span>
     <span class="live"><span class="dot pulse"></span> Live</span>
+    <button id="notifyBtn" class="notify-btn" onclick="toggleNotifications()" title="Get notified">🔔 Notify me</button>
   </div>
   <div class="tabs">
     <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
@@ -313,5 +316,78 @@ fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.stat
   const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
   document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
 }).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
+
+/* ===== NOTIFICATIONS (Web Push) ===== */
+// Your site's public VAPID key (safe to expose client-side; pairs with the
+// private key kept secret in the GitHub Action that sends pushes).
+const VAPID_PUBLIC_KEY = "BCrCSjG_1ZLLBafSolBOFytNfvt5lKcyVfVH2hYXcH5tuBJbX1KfhcTFdiQeaEhKQWKN-yMS2t2MnckXgSQ4DvM";
+// jsonbin.io stores push subscriptions so the GitHub Action can read them.
+// NOTE: this key is visible in page source (unavoidable on a static site).
+// It only controls this one small bin, not your GitHub repo — low risk.
+const JSONBIN_ID = "6a49500dda38895dfe2e3cee";
+const JSONBIN_KEY = "$2a$10$C99FlvUkXnHfx8GWNgQySebNtj0tCRqwfAcgykx4wMtbp8L8lSUjm";
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/"+JSONBIN_ID;
+
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+
+async function getSubs(){
+  const r=await fetch(JSONBIN_URL+"/latest",{headers:{"X-Master-Key":JSONBIN_KEY}});
+  if(!r.ok)return [];
+  const j=await r.json();
+  return (j.record && j.record.subscriptions) || [];
+}
+async function saveSubs(list){
+  await fetch(JSONBIN_URL,{method:"PUT",
+    headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
+    body:JSON.stringify({subscriptions:list})});
+}
+
+async function toggleNotifications(){
+  const btn=document.getElementById("notifyBtn");
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    alert("Notifications aren't supported in this browser.\n\nOn iPhone: add this site to your Home Screen first (Share → Add to Home Screen), then try again from the home-screen app.");
+    return;
+  }
+  try{
+    const reg=await navigator.serviceWorker.register('sw.js');
+    const existing=await reg.pushManager.getSubscription();
+    if(existing){
+      // Already subscribed -> unsubscribe (remove from jsonbin too)
+      const endpoint=existing.endpoint;
+      await existing.unsubscribe();
+      const subs=await getSubs();
+      await saveSubs(subs.filter(s=>s.endpoint!==endpoint));
+      btn.classList.remove("on");btn.textContent="🔔 Notify me";
+      return;
+    }
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){alert("Notifications permission was not granted.");return;}
+    const sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    const subJson=sub.toJSON();
+    const subs=await getSubs();
+    if(!subs.find(s=>s.endpoint===subJson.endpoint)){
+      subs.push(subJson);
+      await saveSubs(subs);
+    }
+    btn.classList.add("on");btn.textContent="🔔 Subscribed";
+  }catch(e){
+    alert("Couldn't enable notifications: "+e.message);
+  }
+}
+// Reflect current subscription state on load
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>reg.pushManager.getSubscription()).then(sub=>{
+    if(sub){const btn=document.getElementById("notifyBtn");if(btn){btn.classList.add("on");btn.textContent="🔔 Subscribed";}}
+  }).catch(()=>{});
+}
 </script>
 </body></html>
