@@ -1,8 +1,10 @@
 name: ARC Occupancy Logger
 on:
   schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch:
+    - cron: "*/30 * * * *"   # backup schedule (GitHub cron is unreliable)
+  workflow_dispatch:          # manual "Run workflow" button
+  repository_dispatch:        # reliable external trigger (cron-job.org)
+    types: [run-logger]
 
 permissions:
   contents: write
