@@ -33,6 +33,9 @@
   .prefs-row{display:flex;align-items:center;gap:9px;font-size:13.5px;padding:6px 0;cursor:pointer}
   .prefs-row input{width:16px;height:16px;accent-color:var(--blue-d)}
   .prefs-save{margin-top:10px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;background:var(--blue-d);color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer}
+  .prefs-divider{border-top:1px solid var(--line);margin:12px 0}
+  .prefs-fav-row{display:flex;gap:8px;margin:8px 0 4px;padding-left:24px}
+  .prefs-fav-row select{font-family:'Inter',sans-serif;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink)}
   .tabs{display:flex;gap:4px;margin-top:16px}
   .tabs button{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;padding:10px 20px;background:transparent;color:var(--sub);border:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:.15s;border-radius:6px 6px 0 0}
   .tabs button.on{color:var(--blue-d);border-bottom-color:var(--blue-d);background:rgba(20,73,168,.05)}
@@ -127,6 +130,23 @@
     <label class="prefs-row"><input type="checkbox" id="pref-closing" checked> Closing soon</label>
     <label class="prefs-row"><input type="checkbox" id="pref-opening" checked> Opening soon + today's forecast (quietest &amp; busiest times)</label>
     <label class="prefs-row"><input type="checkbox" id="pref-tomorrow" checked> Holiday / special hours heads-up</label>
+    <div class="prefs-divider"></div>
+    <div class="prefs-title">My favorite time to go</div>
+    <label class="prefs-row"><input type="checkbox" id="pref-fav-enabled"> Remind me 30 min before</label>
+    <div class="prefs-fav-row">
+      <select id="pref-fav-facility">
+        <option value="ARC Access">ARC</option>
+        <option value="Recreation Pool">Pool</option>
+      </select>
+      <select id="pref-fav-hour">
+        <option value="6">6am</option><option value="7">7am</option><option value="8">8am</option>
+        <option value="9">9am</option><option value="10">10am</option><option value="11">11am</option>
+        <option value="12">12pm</option><option value="13">1pm</option><option value="14">2pm</option>
+        <option value="15" selected>3pm</option><option value="16">4pm</option><option value="17">5pm</option>
+        <option value="18">6pm</option><option value="19">7pm</option><option value="20">8pm</option>
+        <option value="21">9pm</option><option value="22">10pm</option>
+      </select>
+    </div>
     <button class="prefs-save" onclick="savePrefs()">Save</button>
   </div>
 </div>
@@ -362,18 +382,24 @@ async function saveSubs(list){
     headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
     body:JSON.stringify({subscriptions:list})});
 }
-const DEFAULT_PREFS={closing:true,opening:true,tomorrow:true};
+const DEFAULT_PREFS={closing:true,opening:true,tomorrow:true,favoriteEnabled:false,favoriteFacility:"ARC Access",favoriteHour:15};
 function readPrefsFromForm(){
   return {
     closing:document.getElementById("pref-closing").checked,
     opening:document.getElementById("pref-opening").checked,
     tomorrow:document.getElementById("pref-tomorrow").checked,
+    favoriteEnabled:document.getElementById("pref-fav-enabled").checked,
+    favoriteFacility:document.getElementById("pref-fav-facility").value,
+    favoriteHour:parseInt(document.getElementById("pref-fav-hour").value,10),
   };
 }
 function fillPrefsForm(prefs){
   document.getElementById("pref-closing").checked=prefs.closing!==false;
   document.getElementById("pref-opening").checked=prefs.opening!==false;
   document.getElementById("pref-tomorrow").checked=prefs.tomorrow!==false;
+  document.getElementById("pref-fav-enabled").checked=!!prefs.favoriteEnabled;
+  document.getElementById("pref-fav-facility").value=prefs.favoriteFacility||"ARC Access";
+  document.getElementById("pref-fav-hour").value=prefs.favoriteHour!=null?prefs.favoriteHour:15;
 }
 function togglePrefsPanel(){
   document.getElementById("prefsPanel").classList.toggle("hidden");
