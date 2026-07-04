@@ -1,970 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>ARC Pulse — UC Davis</title>
 <style>
-:root{
-  --navy:#0f2233;
-  --navy2:#16324a;
-  --white:#f7f9fb;
-  --card:#ffffff;
-  --gold:#ffbf3f;
-  --gold-d:#a01a0a;
-  --ice:#dce7f0;
-  --line:#c9d6e2;
-  --calm:#2fa36b;
-  --busy:#e0692f;
-  --hot:#d8352a;
-  --ink:#0f2233;
-  --muted:#5f7488;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--white);
-  color:var(--ink);
-  font-family:Barlow,system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  line-height:1.5;
-}
-.wrap{
-  max-width:1000px;
-  margin:0 auto;
-  padding:0 20px;
-}
-header{
-  background:var(--navy);
-  color:var(--white);
-  padding:20px 0 0;
-}
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  flex-wrap:wrap;
-}
-.brand .logo{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:800;
-  font-size:clamp(30px,6vw,46px);
-  letter-spacing:.01em;
-  text-transform:uppercase;
-  line-height:.9;
-}
-.brand .logo em{color:var(--gold);font-style:normal}
-.brand .live{
-  margin-left:auto;
-  font-family:"Space Mono",monospace;
-  font-size:10px;
-  letter-spacing:.15em;
-  text-transform:uppercase;
-  color:var(--gold);
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.brand .live .dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--gold);
-}
-.tabs{
-  display:flex;
-  gap:0;
-  margin-top:18px;
-  overflow-x:auto;
-}
-.tabs button{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:700;
-  font-size:17px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  padding:12px 30px;
-  background:transparent;
-  color:rgba(247,249,251,.72);
-  border:none;
-  border-bottom:3px solid transparent;
-  cursor:pointer;
-  transition:.15s;
-  white-space:nowrap;
-}
-.tabs button.on{
-  color:var(--white);
-  border-bottom-color:var(--gold);
-}
-main{padding-top:8px}
-section{
-  padding:26px 0;
-  border-bottom:1px solid var(--line);
-}
-section:last-child{border-bottom:none}
-.eyebrow{
-  font-family:"Space Mono",monospace;
-  font-size:10px;
-  letter-spacing:.2em;
-  text-transform:uppercase;
-  color:var(--gold-d);
-  margin-bottom:16px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.eyebrow::after{
-  content:"";
-  flex:1;
-  height:1px;
-  background:var(--line);
-}
-.hours-top{
-  padding-top:18px;
-}
-.hours-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  background:var(--card);
-  border:1.5px solid var(--line);
-  border-radius:999px;
-  padding:12px 18px;
-  font-family:"Space Mono",monospace;
-  font-size:14px;
-  box-shadow:0 1px 3px rgba(15,34,51,.06);
-  flex-wrap:wrap;
-  line-height:1.25;
-}
-.hours-pill .st{
-  font-weight:700;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-  font-size:12px;
-}
-.hours-pill .st.open{color:var(--calm)}
-.hours-pill .st.closed{color:var(--hot)}
-.hours-warn{
-  margin-top:10px;
-  border-left:3px solid var(--gold-d);
-  background:rgba(255,191,63,.14);
-  padding:10px 13px;
-  font-size:13px;
-  color:#8a6410;
-  border-radius:0 4px 4px 0;
-  font-family:Barlow,sans-serif;
-}
-.hours-warn.closing{
-  border-left-color:var(--hot);
-  background:rgba(216,53,42,.09);
-  color:var(--hot);
-}
-.board{
-  background:var(--navy);
-  border-radius:14px;
-  padding:28px 28px;
-  color:var(--white);
-  display:flex;
-  align-items:center;
-  gap:28px;
-  flex-wrap:wrap;
-  box-shadow:0 4px 20px rgba(15,34,51,.12);
-}
-.board .count{
-  font-family:"Space Mono",monospace;
-  font-weight:700;
-  font-size:clamp(58px,14vw,88px);
-  line-height:.85;
-  color:var(--gold);
-  letter-spacing:-.02em;
-}
-.board .count .of{
-  display:block;
-  font-size:15px;
-  color:rgba(247,249,251,.55);
-  letter-spacing:.05em;
-  margin-top:8px;
-}
-.board .meta{
-  flex:1;
-  min-width:180px;
-}
-.board .verdict{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:700;
-  font-size:clamp(28px,5.5vw,38px);
-  text-transform:uppercase;
-  letter-spacing:.02em;
-  line-height:1;
-}
-.board .pctbar{
-  height:12px;
-  background:rgba(247,249,251,.15);
-  border-radius:6px;
-  margin-top:16px;
-  overflow:hidden;
-}
-.board .pctbar span{
-  display:block;
-  height:100%;
-  border-radius:6px;
-  transition:width .6s;
-}
-.board .when{
-  font-family:"Space Mono",monospace;
-  font-size:12px;
-  color:rgba(247,249,251,.62);
-  margin-top:10px;
-  letter-spacing:.03em;
-}
-.board .tag{
-  display:inline-block;
-  font-family:"Space Mono",monospace;
-  font-size:10px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  padding:4px 10px;
-  border-radius:3px;
-  margin-top:12px;
-  font-weight:700;
-}
-.fc-wrap{
-  background:var(--card);
-  border:1.5px solid var(--line);
-  border-radius:14px;
-  padding:22px;
-  box-shadow:0 1px 3px rgba(15,34,51,.05);
-}
-.fc-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:baseline;
-  margin-bottom:12px;
-  flex-wrap:wrap;
-  gap:6px;
-}
-.fc-head .t{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:700;
-  font-size:24px;
-  text-transform:uppercase;
-  letter-spacing:.03em;
-}
-.fc-head .sub{
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  color:var(--muted);
-}
-.fc-tip{
-  font-family:"Space Mono",monospace;
-  font-size:13px;
-  min-height:18px;
-  margin-top:10px;
-  color:var(--ink);
-}
-.fc-tip b{color:var(--gold-d)}
-.heatwrap{overflow-x:auto;padding-bottom:6px}
-table.heat{
-  border-collapse:collapse;
-  font-family:"Space Mono",monospace;
-  font-size:10px;
-  width:100%;
-  min-width:760px;
-}
-table.heat th{
-  font-weight:400;
-  color:var(--muted);
-  padding:3px 4px;
-  text-align:center;
-}
-table.heat td{
-  width:28px;
-  height:24px;
-  text-align:center;
-  border:1px solid #fff;
-  border-radius:2px;
-}
-.heat-legend{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  margin-top:12px;
-  flex-wrap:wrap;
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  color:var(--muted);
-}
-.heat-legend .hl-swatch{
-  width:22px;height:14px;border-radius:3px;display:inline-block;
-}
-.heat-legend .hl-note{color:var(--line);margin-left:4px}
-.bt-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(125px,1fr));
-  gap:10px;
-}
-.bt-day{
-  background:var(--card);
-  border:1.5px solid var(--line);
-  border-radius:10px;
-  padding:14px 12px;
-  text-align:center;
-  box-shadow:0 1px 3px rgba(15,34,51,.05);
-}
-.bt-day .d{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:700;
-  font-size:16px;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  color:var(--muted);
-}
-.bt-day .time{
-  font-family:"Space Mono",monospace;
-  font-weight:700;
-  font-size:24px;
-  color:var(--navy);
-  margin:6px 0 2px;
-}
-.bt-day .pct{
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  color:var(--calm);
-}
-.ev-list{display:flex;flex-direction:column;gap:8px}
-.ev-item{
-  display:flex;
-  gap:14px;
-  align-items:flex-start;
-  background:var(--card);
-  border:1.5px solid var(--line);
-  border-radius:8px;
-  padding:12px 14px;
-  box-shadow:0 1px 3px rgba(15,34,51,.04);
-}
-.ev-time{
-  font-family:"Space Mono",monospace;
-  font-size:12px;
-  font-weight:700;
-  color:var(--navy);
-  white-space:nowrap;
-  min-width:120px;
-}
-.ev-body .title{font-weight:600;font-size:14px}
-.ev-body .loc{
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  color:var(--gold-d);
-  margin-top:2px;
-}
-.ev-empty{
-  font-family:Barlow,sans-serif;
-  color:var(--muted);
-  font-size:14px;
-  padding:8px 0;
-}
-.cal-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-.cal-head button{
-  font-family:"Space Mono",monospace;
-  font-size:15px;
-  background:var(--navy);
-  color:var(--white);
-  border:none;
-  border-radius:6px;
-  width:34px;
-  height:34px;
-  cursor:pointer;
-}
-.cal-head .mo{
-  font-family:"Barlow Condensed",sans-serif;
-  font-weight:700;
-  font-size:20px;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
-table.cal{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:3px;
-  table-layout:fixed;
-}
-table.cal th{
-  font-family:"Space Mono",monospace;
-  font-size:9px;
-  color:var(--muted);
-  padding:4px 2px;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-}
-table.cal td{
-  border:1px solid var(--line);
-  vertical-align:top;
-  height:58px;
-  padding:5px;
-  background:var(--card);
-  border-radius:5px;
-}
-table.cal td.empty{
-  background:transparent;
-  border:none;
-}
-table.cal td.today{
-  border:2px solid var(--gold);
-  background:rgba(255,191,63,.08);
-}
-table.cal td.closed{background:rgba(216,53,42,.08)}
-table.cal td.special{background:rgba(255,191,63,.14)}
-.cal-day{
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  font-weight:700;
-}
-.cal-hrs{
-  font-family:"Space Mono",monospace;
-  font-size:9px;
-  color:var(--muted);
-  margin-top:3px;
-  line-height:1.3;
-}
-.cal-hrs.closed{color:var(--hot);font-weight:700}
-.cal-hrs.special{color:var(--gold-d)}
-.cal-legend{
-  display:flex;
-  gap:16px;
-  margin-top:10px;
-  font-family:"Space Mono",monospace;
-  font-size:10px;
-  color:var(--muted);
-  flex-wrap:wrap;
-}
-.cal-legend span{display:inline-flex;align-items:center;gap:5px}
-.cal-dot{
-  width:12px;height:12px;border-radius:3px;display:inline-block;
-}
-.statusbar{
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  padding:7px 0;
-  text-align:center;
-  letter-spacing:.05em;
-}
-.statusbar.loading{background:var(--gold);color:var(--navy)}
-.statusbar.ok{background:var(--calm);color:#fff}
-.statusbar.err{background:var(--hot);color:#fff}
-footer{
-  background:var(--navy);
-  color:rgba(247,249,251,.55);
-  padding:22px 0 44px;
-  font-family:"Space Mono",monospace;
-  font-size:11px;
-  line-height:1.7;
-  margin-top:0;
-}
-@media (max-width:700px){
-  .wrap{padding:0 14px}
-  section{padding:22px 0}
-  .board{padding:22px}
-  .board .count{font-size:clamp(56px,18vw,74px)}
-  .board .verdict{font-size:clamp(26px,7vw,34px)}
-  .fc-wrap{padding:18px}
-  .fc-head .t{font-size:22px}
-  .bt-day .time{font-size:22px}
-  table.heat{min-width:680px}
-}
-@media (prefers-reduced-motion:no-preference){
-  .pulse{animation:pl 2s ease-in-out infinite}
-}
-@keyframes pl{
-  0%,100%{opacity:1}
-  50%{opacity:.3}
-}
-.hiddend{display:none}
+  /* Athletic/scoreboard identity: condensed display + geometric body + mono data */
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{
+    --navy:#0f2233;      /* deep aggie ink */
+    --navy2:#16324a;
+    --white:#f7f9fb;
+    --card:#ffffff;
+    --gold:#ffbf3f;      /* bright aggie gold - energy */
+    --gold-d:#e0a01a;
+    --ice:#dce7f0;
+    --line:#c9d6e2;
+    --calm:#2fa36b;      /* live states */
+    --mod:#e8a72c;
+    --busy:#e0692f;
+    --hot:#d8352a;
+    --ink:#0f2233;
+    --muted:#5f7488;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--white);color:var(--ink);font-family:'Barlow',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+
+  /* header - scoreboard bar */
+  header{background:var(--navy);color:var(--white);padding:20px 0 0}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(30px,6vw,46px);letter-spacing:.01em;text-transform:uppercase;line-height:.9}
+  .brand .logo em{color:var(--gold);font-style:normal}
+  .brand .live{margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:6px}
+  .brand .live .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+  .tabs{display:flex;gap:0;margin-top:18px}
+  .tabs button{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;padding:12px 30px;background:transparent;color:rgba(247,249,251,.5);border:none;border-bottom:3px solid transparent;cursor:pointer;transition:.15s}
+  .tabs button.on{color:var(--white);border-bottom-color:var(--gold)}
+
+  main{padding-top:8px}
+  section{padding:26px 0;border-bottom:1px solid var(--line)}
+  section:last-child{border-bottom:none}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-d);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  /* SIGNATURE: scoreboard occupancy readout */
+  .board{background:var(--navy);border-radius:10px;padding:26px 28px;color:var(--white);display:flex;align-items:center;gap:28px;flex-wrap:wrap;box-shadow:0 4px 20px rgba(15,34,51,.12)}
+  .board .count{font-family:'Space Mono',monospace;font-weight:700;font-size:clamp(52px,12vw,80px);line-height:.85;color:var(--gold);letter-spacing:-.02em}
+  .board .count .of{display:block;font-size:15px;color:rgba(247,249,251,.55);letter-spacing:.05em;margin-top:8px}
+  .board .meta{flex:1;min-width:180px}
+  .board .verdict{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(26px,5vw,34px);text-transform:uppercase;letter-spacing:.02em;line-height:1}
+  .board .pctbar{height:10px;background:rgba(247,249,251,.15);border-radius:5px;margin-top:16px;overflow:hidden}
+  .board .pctbar span{display:block;height:100%;border-radius:5px;transition:width .6s}
+  .board .when{font-family:'Space Mono',monospace;font-size:11px;color:rgba(247,249,251,.5);margin-top:10px;letter-spacing:.03em}
+  .board .tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px;margin-top:12px;font-weight:700}
+
+  /* hours pill */
+  .hours-pill{display:inline-flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:100px;padding:10px 18px;font-family:'Space Mono',monospace;font-size:13px;box-shadow:0 1px 3px rgba(15,34,51,.06)}
+  .hours-pill .st{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
+  .hours-pill .st.open{color:var(--calm)}.hours-pill .st.closed{color:var(--hot)}
+  .hours-warn{margin-top:10px;border-left:3px solid var(--gold-d);background:rgba(255,191,63,.14);padding:9px 13px;font-size:13px;color:#8a6410;border-radius:0 4px 4px 0;font-family:'Barlow',sans-serif}
+  .hours-warn.closing{border-left-color:var(--hot);background:rgba(216,53,42,.09);color:var(--hot)}
+
+  /* forecast */
+  .fc-wrap{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(15,34,51,.05)}
+  .fc-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+  .fc-head .t{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.03em}
+  .fc-head .sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+  .fc-tip{font-family:'Space Mono',monospace;font-size:12px;min-height:18px;margin-top:10px;color:var(--ink)}
+  .fc-tip b{color:var(--gold-d)}
+
+  /* heatmap */
+  .heatwrap{overflow-x:auto;padding-bottom:6px}
+  table.heat{border-collapse:collapse;font-family:'Space Mono',monospace;font-size:10px}
+  table.heat th{font-weight:400;color:var(--muted);padding:3px 4px;text-align:center}
+  table.heat td{width:26px;height:22px;text-align:center;border:1px solid var(--white);border-radius:2px}
+  .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+  .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
+  .heat-legend .hl-note{color:var(--line);margin-left:4px}
+
+  /* best times per day */
+  .bt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .bt-day{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(15,34,51,.05)}
+  .bt-day .d{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .bt-day .time{font-family:'Space Mono',monospace;font-weight:700;font-size:22px;color:var(--navy);margin:6px 0 2px}
+  .bt-day .pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--calm)}
+
+  /* events */
+  .ev-list{display:flex;flex-direction:column;gap:8px}
+  .ev-item{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(15,34,51,.04)}
+  .ev-time{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap;min-width:120px}
+  .ev-body .title{font-weight:600;font-size:14px}
+  .ev-body .loc{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold-d);margin-top:2px}
+  .ev-empty{font-family:'Barlow',sans-serif;color:var(--muted);font-size:14px;padding:8px 0}
+
+  /* calendar */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cal-head button{font-family:'Space Mono',monospace;font-size:15px;background:var(--navy);color:var(--white);border:none;border-radius:6px;width:34px;height:34px;cursor:pointer}
+  .cal-head .mo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.04em}
+  table.cal{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+  table.cal th{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);padding:4px 2px;text-transform:uppercase;letter-spacing:.05em}
+  table.cal td{border:1px solid var(--line);vertical-align:top;height:58px;padding:5px;background:var(--card);border-radius:5px}
+  table.cal td.empty{background:transparent;border:none}
+  table.cal td.today{border:2px solid var(--gold);background:rgba(255,191,63,.08)}
+  table.cal td.closed{background:rgba(216,53,42,.08)}
+  table.cal td.special{background:rgba(255,191,63,.14)}
+  .cal-day{font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+  .cal-hrs{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .cal-hrs.closed{color:var(--hot);font-weight:700}
+  .cal-hrs.special{color:var(--gold-d)}
+  .cal-legend{display:flex;gap:16px;margin-top:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);flex-wrap:wrap}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  .cal-dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  .hidden{display:none}
+  .statusbar{font-family:'Space Mono',monospace;font-size:11px;padding:7px 0;text-align:center;letter-spacing:.05em}
+  .statusbar.loading{background:var(--gold);color:var(--navy)}.statusbar.ok{background:var(--calm);color:#fff}.statusbar.err{background:var(--hot);color:#fff}
+  footer{background:var(--navy);color:rgba(247,249,251,.55);padding:22px 0 44px;font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;margin-top:0}
+  @media (prefers-reduced-motion:no-preference){.pulse{animation:pl 2s ease-in-out infinite}@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}}
 </style>
 </head>
 <body>
 <div id="statusbar" class="statusbar loading">Loading live data…</div>
-
-<header>
-  <div class="wrap">
-    <div class="brand">
-      <span class="logo">ARC <em>Pulse</em></span>
-      <span class="live"><span class="dot pulse"></span> Live UC Davis</span>
-    </div>
-    <div class="tabs">
-      <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
-      <button id="tab-pool" onclick="setFacility('Recreation Pool')">Pool</button>
-    </div>
+<header><div class="wrap">
+  <div class="brand">
+    <span class="logo">ARC <em>Pulse</em></span>
+    <span class="live"><span class="dot pulse"></span> Live · UC Davis</span>
   </div>
-</header>
-
+  <div class="tabs">
+    <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
+    <button id="tab-pool" onclick="setFacility('Recreation Pool')">Pool</button>
+  </div>
+</div></header>
 <main class="wrap">
-  <section class="hours-top">
-    <div class="eyebrow">Hours today</div>
-    <div id="hoursBanner"></div>
+  <section><div class="eyebrow">Right now</div><div id="board"></div><div id="hoursBanner" style="margin-top:14px"></div></section>
+  <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
+  <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
+  <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
+  <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
+    <div class="heat-legend"><span>Quieter</span>
+      <span class="hl-swatch" style="background:#eef3f7"></span><span class="hl-swatch" style="background:#cfe0d3"></span>
+      <span class="hl-swatch" style="background:#f0d68a"></span><span class="hl-swatch" style="background:#e8a566"></span>
+      <span class="hl-swatch" style="background:#d8352a"></span><span>Busier</span>
+      <span class="hl-note">· % full · blank = no data yet</span></div>
   </section>
-
-  <section>
-    <div class="eyebrow">Right now</div>
-    <div id="board"></div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Today's forecast</div>
-    <div id="forecast"></div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Best time to go each day</div>
-    <div id="bestTimes"></div>
-  </section>
-
-  <section id="sec-events" class="hiddend">
-    <div class="eyebrow">Today at the ARC — classes & reservations</div>
-    <div id="events"></div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Typical week</div>
-    <div class="heatwrap">
-      <div id="heat"></div>
-      <div class="heat-legend">
-        <span>Quieter</span>
-        <span class="hl-swatch" style="background:#eef3f7"></span>
-        <span class="hl-swatch" style="background:#cfe0d3"></span>
-        <span class="hl-swatch" style="background:#f0d68a"></span>
-        <span class="hl-swatch" style="background:#e8a566"></span>
-        <span class="hl-swatch" style="background:#d8352a"></span>
-        <span>Busier</span>
-        <span class="hl-note">blank = no data yet</span>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="eyebrow">Hours calendar</div>
-    <div id="calendar"></div>
-  </section>
+  <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
 </main>
-
-<footer>
-  <div class="wrap">
-    ARC Pulse — live public facility occupancy data. Aggregate counts only, no personal data.<br />
-    <span id="freshness"></span>
-  </div>
-</footer>
-
+<footer><div class="wrap">
+  ARC PULSE · live public facility-occupancy data · aggregate counts only, no personal data<br/>
+  <span id="freshness"></span>
+</div></footer>
 <script>
-const CSVURL = "https://raw.githubusercontent.com/ergoldman/arc-pulse-data/main/arc_occupancy.csv";
-const HOURSURL = "https://raw.githubusercontent.com/ergoldman/arc-pulse-data/main/hours.json";
-const EVENTSURL = "https://raw.githubusercontent.com/ergoldman/arc-pulse-data/main/events.json";
+const CSV_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv",HOURS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json",EVENTS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/events.json";
+const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTHABBR=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
+const HEATCOLOR=p=>p<8?"#eef3f7":p<20?"#cfe0d3":p<35?"#f0d68a":p<55?"#e8a566":"#d8352a";
+const LOADCOLOR=p=>p<25?"#2fa36b":p<50?"#e8a72c":p<75?"#e0692f":"#d8352a";
+let DATA={},HOURS=null,EVENTS=null,FACILITY="ARC Access";
 
-const DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const DOWFULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const MONTHNAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const MONTHABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function pacificNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));}
+function dateKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');}
+function isSummer(d){const m=d.getMonth()+1;return (m>6&&m<9)||(m===6&&d.getDate()>=15)||(m===9&&d.getDate()<22);}
+function fmtClock(hhmm){if(!hhmm)return"";let[h,m]=hhmm.split(":").map(Number);const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;return m===0?hr+ap:hr+":"+String(m).padStart(2,'0')+ap;}
 
-const HEATCOLORS = [
-  { max: 8, color: "#eef3f7" },
-  { max: 20, color: "#cfe0d3" },
-  { max: 35, color: "#f0d68a" },
-  { max: 55, color: "#e8a566" },
-  { max: 100, color: "#d8352a" }
-];
-
-const LOADCOLOR = p => p < 25 ? "#2fa36b" : p < 50 ? "#e8a72c" : p < 75 ? "#e0692f" : "#d8352a";
-
-let DATA = null, HOURS = null, EVENTS = null, FACILITY = "ARC Access";
-let calMonth = null, calYear = null;
-
-function pacificNow(){
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
-}
-function dateKey(d){
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-}
-function fmtH(h, use12=true){
-  if(!use12) return String(h).padStart(2,"0") + ":00";
-  const a = h < 12 ? "a" : "p";
-  let hr = h % 12;
-  if(hr === 0) hr = 12;
-  return hr + a;
-}
-function fmtClock(hhmm){
-  if(!hhmm) return "";
-  let [h,m] = hhmm.split(":").map(Number);
-  const a = h < 12 ? "am" : "pm";
-  let hr = h % 12;
-  if(hr === 0) hr = 12;
-  return hr + ":" + String(m).padStart(2,"0") + a;
-}
 function parseCSV(text){
-  const lines = text.trim().split(/\r?\n/);
-  const head = lines[0].split(",");
-  return lines.slice(1).map(l => {
-    const p = l.split(",");
-    const o = {};
-    head.forEach((h,i)=>o[h]=p[i]);
-    const dtUTC = new Date(o.timestamp + "Z");
-    const pac = new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
-    return {
-      name: o.facility,
-      cur: +o.current,
-      max: +o.maximum,
-      pct: +o.pctfull,
-      hour: pac.getHours(),
-      dow: pac.getDay(),
-      dt: dtUTC
-    };
-  }).filter(r => r.name && !isNaN(r.pct) && r.name !== "Rock Wall");
+  const lines=text.trim().split(/\r?\n/);const head=lines[0].split(",");
+  return lines.slice(1).map(l=>{const p=l.split(",");const o={};head.forEach((h,i)=>o[h]=p[i]);
+    const dtUTC=new Date(o.timestamp+"Z");const pac=new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
+    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC};
+  }).filter(r=>r.name&&!isNaN(r.pct)&&r.name!=="Rock Wall");
 }
-function isOpenHour(dow, hour){
-  return dow === 5 ? hour >= 8 && hour < 23 : hour >= 5 && hour < 23;
-}
+function isOpenHour(dow,hour){return dow>=5?(hour>=8&&hour<=23):(hour>=5&&hour<=23);}
+
 function analyze(rows){
-  const zones = {};
-  rows.forEach(r => (zones[r.name] ||= []).push(r));
-  const out = {};
-  for(const [name, rs] of Object.entries(zones)){
-    rs.sort((a,b)=>a.dt-b.dt);
-    const max = rs[rs.length-1].max;
-    const cell = {};
-    const hourly = {};
-    rs.filter(r => isOpenHour(r.dow, r.hour)).forEach(r => {
-      const k = r.dow + "-" + r.hour;
-      (cell[k] ||= []).push(r.pct);
-      (hourly[r.hour] ||= []).push(r.pct);
-    });
-    const avg = a => a.reduce((x,y)=>x+y,0)/a.length;
-    const std = a => {
-      if(a.length < 2) return 0;
-      const m = avg(a);
-      return Math.sqrt(avg(a.map(x => (x - m) ** 2)));
-    };
-    const latest = rs[rs.length-1];
-    const slot = cell[latest.dow + "-" + latest.hour] || [];
-    const normal = slot.length ? avg(slot) : null;
-    const sd = slot.length > 1 ? std(slot) : 0;
-    const z = sd ? (latest.pct - normal) / sd : 0;
-    const verdict = z < -0.6 ? "Quieter than usual" : z > 0.6 ? "Busier than usual" : "About normal";
-    const heat = [];
-    for(let d=0; d<7; d++){
-      for(let h=6; h<24; h++){
-        const c = cell[d + "-" + h];
-        if(c) heat.push({d,h,pct:avg(c)});
-      }
-    }
-    const fc = [];
-    for(let h=latest.hour; h<24; h++){
-      const c = cell[latest.dow + "-" + h];
-      if(c) fc.push({h,pct:avg(c)});
-    }
-    const best = [];
-    for(let d=0; d<7; d++){
-      let bh = null, bp = 999;
-      for(let h=7; h<20; h++){
-        const c = cell[d + "-" + h];
-        if(!c) continue;
-        const p = avg(c);
-        if(p < bp){ bp = p; bh = h; }
-      }
-      if(bh !== null) best.push({d,h:bh,pct:bp});
-    }
-    out[name] = {
-      max,
-      now: latest.cur,
-      pct: latest.pct,
-      hour: latest.hour,
-      dow: latest.dow,
-      normal,
-      verdict,
-      heat,
-      forecast: fc,
-      best,
-      lastDT: latest.dt
-    };
+  const zones={};rows.forEach(r=>{(zones[r.name]=zones[r.name]||[]).push(r);});
+  const out={};
+  for(const [name,rs] of Object.entries(zones)){
+    rs.sort((a,b)=>a.dt-b.dt);const max=rs[rs.length-1].max;
+    const cell={},hourly={};
+    rs.filter(r=>isOpenHour(r.dow,r.hour)).forEach(r=>{
+      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
+      (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);});
+    const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+    const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
+    const latest=rs[rs.length-1];
+    const slot=cell[latest.dow+"-"+latest.hour]||[latest.pct];
+    const normal=avg(slot);const sd=slot.length>1?std(slot):1;const z=sd?(latest.pct-normal)/sd:0;
+    const verdict=z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
+    const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
+    const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
+    // best time per day (quietest open hour 7-20)
+    const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
+    out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
   }
   return out;
 }
 
-function heatColor(p){
-  if(p == null) return "#f7f9fb";
-  for(const s of HEATCOLORS){
-    if(p <= s.max) return s.color;
-  }
-  return HEATCOLORS[HEATCOLORS.length - 1].color;
-}
-function textColorForBg(hex){
-  const c = hex.replace("#","");
-  const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
-  const y = (r*299 + g*587 + b*114) / 1000;
-  return y > 150 ? "#0f2233" : "#fff";
-}
-
 function renderBoard(){
-  const z = DATA?.[FACILITY];
-  const el = document.getElementById("board");
-  if(!z){ el.innerHTML = "<div class='board'>No data yet.</div>"; return; }
-  const col = LOADCOLOR(z.pct);
-  const tcbg = z.verdict.includes("Quieter") ? "rgba(47,163,107,.2)" : z.verdict.includes("Busier") ? "rgba(216,53,42,.2)" : "rgba(232,167,44,.2)";
-  const tccol = z.verdict.includes("Quieter") ? "#7fe0b0" : z.verdict.includes("Busier") ? "#f5a89f" : "#f0cd7a";
-  el.innerHTML = `
-    <div class="board">
-      <div class="count">${z.cur.toLocaleString()}<span class="of">of ${z.max.toLocaleString()}</span></div>
-      <div class="meta">
-        <div class="verdict">${z.verdict}</div>
-        <div class="pctbar"><span style="width:${Math.min(100,z.pct)}%;background:${col}"></span></div>
-        <div class="when">${Math.round(z.pct)}% full · usually ${Math.round(z.normal || z.pct)}% at ${DOWFULL[z.dow]} ${fmtH(z.hour)}</div>
-        <span class="tag" style="background:${tcbg};color:${tccol}">${z.verdict}</span>
-      </div>
-    </div>`;
+  const z=DATA[FACILITY];const el=document.getElementById("board");
+  if(!z){el.innerHTML='<div class="board">No data yet.</div>';return;}
+  const n=z.now;const col=LOADCOLOR(n.pct);
+  const tcbg=n.verdict.includes("Quiet")?"rgba(47,163,107,.2)":n.verdict.includes("Busier")?"rgba(216,53,42,.2)":"rgba(232,167,44,.2)";
+  const tccol=n.verdict.includes("Quiet")?"#7fe0b0":n.verdict.includes("Busier")?"#f5a89f":"#f0cd7e";
+  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+'</span></div>'+
+    '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
+    '<div class="pctbar"><span style="width:'+Math.min(100,n.pct)+'%;background:'+col+'"></span></div>'+
+    '<div class="when">'+Math.round(n.pct)+'% full · usually ~'+Math.round(n.normal)+'% · '+DOWFULL[n.now?n.dow:n.dow]+' '+fmtH(n.hour)+'</div>'+
+    '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
 
 function renderForecast(){
-  const z = DATA?.[FACILITY];
-  const el = document.getElementById("forecast");
-  if(!z || z.forecast.length < 2){
-    el.innerHTML = "<div class='fc-wrap'>Not enough data yet — forecast fills in as readings accumulate.</div>";
-    return;
-  }
-  const fc = z.forecast;
-  const W=760,H=250,padL=42,padR=16,padB=34,padT=14;
-  const plotW=W-padL-padR, plotH=H-padT-padB;
-  const hmin=fc[0].h, hmax=fc[fc.length-1].h;
-  const xp = h => padL + (hmax===hmin ? 0 : (h-hmin)/(hmax-hmin)*plotW);
-  const yp = p => padT + (1-p/100)*plotH;
-  let line = "";
-  fc.forEach((f,i)=>line += (i===0 ? `M ${xp(f.h)} ${yp(f.pct)}` : ` L ${xp(f.h)} ${yp(f.pct)}`));
-  const area = `${line} L ${xp(fc[fc.length-1].h)} ${yp(0)} L ${xp(fc[0].h)} ${yp(0)} Z`;
-  const grid = [0,25,50,75,100].map(g => `
-    <g>
-      <line x1="${padL}" y1="${yp(g)}" x2="${W-padR}" y2="${yp(g)}" stroke="#dce7f0" stroke-width="0.8"/>
-      <text x="${padL-8}" y="${yp(g)+3}" text-anchor="end" font-family="Space Mono" font-size="10" fill="#5f7488">${g}</text>
-    </g>
-  `).join("");
-  let dots = "", xlab = "";
-  fc.forEach((f,i)=>{
-    dots += `<circle class="fcdot" cx="${xp(f.h)}" cy="${yp(f.pct)}" r="5.5" fill="${LOADCOLOR(f.pct)}" stroke="#0f2233" stroke-width="1.5" data-h="${f.h}" data-p="${f.pct}" style="cursor:pointer"/>`;
-    if(i % 2 === 0 || i === fc.length-1) xlab += `<text x="${xp(f.h)}" y="${H-10}" text-anchor="middle" font-family="Space Mono" font-size="10" fill="#5f7488">${fmtH(f.h)}</text>`;
-  });
-  const svg = `
-    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%;display:block">
-      ${grid}
-      <path d="${area}" fill="rgba(255,191,63,0.16)"></path>
-      <path d="${line}" fill="none" stroke="#e0a01a" stroke-width="3"></path>
-      ${dots}
-      ${xlab}
-    </svg>`;
-  el.innerHTML = `
-    <div class="fc-wrap">
-      <div class="fc-head">
-        <span class="t">Rest of ${DOWFULL[z.dow]}</span>
-        <span class="sub">predicted full % as the day goes on</span>
-      </div>
-      ${svg}
-      <div class="fc-tip" id="fcTip">Tap a point for the estimate.</div>
-    </div>`;
-  el.querySelectorAll(".fcdot").forEach(d => d.addEventListener("click", ()=>{
-    const h = +d.dataset.h, p = +d.dataset.p;
-    const ppl = Math.round(z.max * p / 100);
-    const lbl = p < 25 ? "quiet" : p < 50 ? "moderate" : p < 75 ? "busy" : "packed";
-    document.getElementById("fcTip").innerHTML = `<b>${fmtH(h)}</b> — ${p.toFixed(0)}% full, about ${ppl.toLocaleString()} of ${z.max.toLocaleString()} · ${lbl}`;
-  }));
+  const z=DATA[FACILITY];const el=document.getElementById("forecast");
+  if(!z||z.forecast.length<2){el.innerHTML='<div class="fc-wrap">Not enough data yet — fills in as readings accumulate.</div>';return;}
+  const fc=z.forecast;const W=680,H=190,padL=36,padR=14,padB=26,padT=10;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const hmin=fc[0].h,hmax=fc[fc.length-1].h;
+  const x=h=>padL+(hmax===hmin?0:(h-hmin)/(hmax-hmin))*plotW;
+  const y=p=>padT+(1-p/100)*plotH;
+  let line="";fc.forEach((f,i)=>{line+=(i===0?"M":"L")+x(f.h)+" "+y(f.pct)+" ";});
+  const area=line+"L"+x(fc[fc.length-1].h)+" "+y(0)+" L"+x(fc[0].h)+" "+y(0)+" Z";
+  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#c9d6e2" stroke-width="0.5"/><text x="'+(padL-6)+'" y="'+(y(g)+3)+'" text-anchor="end" font-family="Space Mono" font-size="9" fill="#5f7488">'+g+'</text>';});
+  let dots="",xlab="";
+  fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="4.5" fill="'+LOADCOLOR(f.pct)+'" stroke="#0f2233" stroke-width="1.5" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
+    if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-8)+'" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#5f7488">'+fmtH(f.h)+'</text>';});
+  const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(255,191,63,0.16)"/><path d="'+line+'" fill="none" stroke="#e0a01a" stroke-width="2.5"/>'+dots+xlab+'</svg>';
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted % full · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
+  el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
+    const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.max*p/100);
+    const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
+    document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% full · ~'+ppl.toLocaleString()+' of '+z.max.toLocaleString()+' · <b>'+lbl+'</b>';}));
 }
 
 function renderBest(){
-  const z = DATA?.[FACILITY];
-  const el = document.getElementById("bestTimes");
-  if(!z || !z.best.length){
-    el.innerHTML = "<div class='ev-empty'>Not enough data yet — best times fill in as readings accumulate.</div>";
-    return;
-  }
-  let h = `<div class="bt-grid">`;
-  for(let d=0; d<7; d++){
-    const b = z.best.find(x => x.d === d);
-    h += `<div class="bt-day">
-      <div class="d">${DOW[d]}</div>
-      ${b ? `<div class="time">${fmtH(b.h)}</div><div class="pct">${Math.round(b.pct)}% full</div>` : `<div class="time">—</div><div class="pct">no data</div>`}
-    </div>`;
-  }
-  h += `</div>`;
-  el.innerHTML = h;
+  const z=DATA[FACILITY];const el=document.getElementById("bestTimes");
+  if(!z||!z.best.length){el.innerHTML='<div class="ev-empty">Not enough data yet — best times fill in as readings accumulate.</div>';return;}
+  let h='<div class="bt-grid">';
+  for(let d=0;d<7;d++){const b=z.best.find(x=>x.d===d);
+    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
+  h+='</div>';el.innerHTML=h;
 }
 
 function renderHeat(){
-  const z = DATA?.[FACILITY];
-  const el = document.getElementById("heat");
-  if(!z){ el.innerHTML = ""; return; }
-  const lk = {};
-  z.heat.forEach(c => lk[c.d + "-" + c.h] = c.pct);
-  let h = `<table class="heat"><tr><th></th>`;
-  for(let hr=6; hr<24; hr++) h += `<th>${fmtH(hr)}</th>`;
-  h += `</tr>`;
-  for(let d=0; d<7; d++){
-    h += `<tr><th style="text-align:right;padding-right:8px">${DOW[d]}</th>`;
-    for(let hr=6; hr<24; hr++){
-      const p = lk[d + "-" + hr];
-      const bg = heatColor(p);
-      const fg = textColorForBg(bg);
-      h += `<td style="background:${bg};color:${fg}" title="${DOWFULL[d]} ${fmtH(hr)}${p==null ? "" : " · " + Math.round(p) + "% full"}">${p==null ? "" : Math.round(p)}</td>`;
-    }
-    h += `</tr>`;
-  }
-  h += `</table>`;
-  el.innerHTML = h;
+  const z=DATA[FACILITY];if(!z){document.getElementById("heat").innerHTML="";return;}
+  const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
+  let h='<table class="heat"><tr><th></th>';for(let hr=6;hr<24;hr++)h+='<th>'+fmtH(hr)+'</th>';h+='</tr>';
+  for(let d=0;d<7;d++){h+='<tr><th style="text-align:right;padding-right:8px">'+DOW[d]+'</th>';
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f7f9fb":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#0f2233");
+      h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':Math.round(p)+'%')+'">'+(p==null?'':Math.round(p))+'</td>';}h+='</tr>';}
+  h+='</table>';document.getElementById("heat").innerHTML=h;
 }
 
-function hoursForDay(d){
-  if(!HOURS) return null;
-  const key = dateKey(d);
-  if(HOURS.special && HOURS.special[key]) return HOURS.special[key];
-  const weekend = d.getDay()===0 || d.getDay()===6;
-  const set = weekend ? HOURS.weekend : HOURS.weekday;
-  return (isSummer(d) ? HOURS.summer : HOURS.regular)?.[weekend ? "weekend" : "weekday"] || set;
-}
-function isSummer(d){
-  const m = d.getMonth()+1;
-  return m >= 6 && m <= 9;
-}
+/* hours */
+function hoursForDay(d){if(!HOURS)return null;const key=dateKey(d);if(HOURS.special&&HOURS.special[key])return HOURS.special[key];
+  const weekend=(d.getDay()===0||d.getDay()===6);const set=isSummer(d)?HOURS.summer:HOURS.regular;return weekend?set.weekend:set.weekday;}
 function renderHours(){
-  const el = document.getElementById("hoursBanner");
-  if(!HOURS){ el.innerHTML = ""; return; }
-  const now = pacificNow();
-  const today = hoursForDay(now);
-  let html = "";
-  if(today.closed){
-    html = `<div class="hours-pill"><span class="st closed">Closed</span><span>Today</span></div>`;
-  }else{
-    const mins = now.getHours()*60 + now.getMinutes();
-    const openM = +today.open.split(":")[0]*60 + +today.open.split(":")[1];
-    let closeM = +today.close.split(":")[0]*60 + +today.close.split(":")[1];
-    if(today.close === "24:00") closeM = 1440;
-    const isOpen = mins >= openM && mins < closeM;
-    html = `<div class="hours-pill"><span class="st ${isOpen ? "open" : "closed"}">${isOpen ? "Open" : "Closed"}</span><span>Today ${fmtClock(today.open)}–${fmtClock(today.close)}</span></div>`;
-    if(isOpen && closeM - mins < 60){
-      html += `<div class="hours-warn closing">Closing soon · ${fmtClock(today.close)} today.</div>`;
-    }
-  }
-  el.innerHTML = html;
+  const el=document.getElementById("hoursBanner");if(!HOURS){el.innerHTML='';return;}
+  const now=pacificNow();const today=hoursForDay(now);let html="";
+  if(today.closed){html+='<div class="hours-pill"><span class="st closed">Closed today</span></div>';}
+  else{const mins=now.getHours()*60+now.getMinutes();const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
+    let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];if(today.close==="24:00")closeM=1440;
+    const isOpen=mins>=openM&&mins<closeM;
+    html+='<div class="hours-pill"><span class="st '+(isOpen?'open':'closed')+'">'+(isOpen?'Open':'Closed')+'</span><span>Today '+fmtClock(today.open)+'–'+fmtClock(today.close)+'</span></div>';
+    if(isOpen&&closeM-mins<=60)html+='<div class="hours-warn closing">Closing soon — '+fmtClock(today.close)+' today.</div>';}
+  const warns=[];for(let i=1;i<=7;i++){const d=new Date(now);d.setDate(now.getDate()+i);const k=dateKey(d);
+    if(HOURS.special&&HOURS.special[k]){const s=HOURS.special[k];const lbl=DOW[(d.getDay()+6)%7]+' '+MONTHABBR[d.getMonth()]+' '+d.getDate();
+      warns.push(s.closed?'<b>'+lbl+':</b> closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
+  if(warns.length)html+='<div class="hours-warn">Heads up · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
+  el.innerHTML=html;
 }
 
+/* events (from events.json if present) */
 function renderEvents(){
-  const sec = document.getElementById("sec-events");
-  const el = document.getElementById("events");
-  if(FACILITY !== "ARC Access" || !EVENTS || !EVENTS.days){
-    sec.classList.add("hiddend");
-    return;
-  }
-  const now = pacificNow();
-  const key = dateKey(now);
-  const today = EVENTS.days[key];
-  if(!today || !today.length){
-    sec.classList.add("hiddend");
-    return;
-  }
-  sec.classList.remove("hiddend");
-  el.innerHTML = `<div class="ev-list">` + today.map(eh => `
-    <div class="ev-item">
-      <div class="ev-time">${eh.time}</div>
-      <div class="ev-body">
-        <div class="title">${eh.title}</div>
-        ${eh.loc ? `<div class="loc">${eh.loc}</div>` : ""}
-      </div>
-    </div>
-  `).join("") + `</div>`;
+  const sec=document.getElementById("sec-events");const el=document.getElementById("events");
+  if(FACILITY!=="ARC Access"||!EVENTS||!EVENTS.days){sec.classList.add("hidden");return;}
+  const now=pacificNow();const key=dateKey(now);
+  const today=EVENTS.days[key];
+  if(!today||!today.length){sec.classList.add("hidden");return;}
+  sec.classList.remove("hidden");
+  let h='<div class="ev-list">';
+  today.forEach(e=>{h+='<div class="ev-item"><div class="ev-time">'+e.time+'</div><div class="ev-body"><div class="title">'+e.title+'</div>'+(e.loc?'<div class="loc">'+e.loc+'</div>':'')+'</div></div>';});
+  h+='</div>';el.innerHTML=h;
 }
 
+/* calendar */
+let calMonth=null,calYear=null;
 function renderCalendar(){
-  const el = document.getElementById("calendar");
-  const now = pacificNow();
-  if(calMonth == null){ calMonth = now.getMonth(); calYear = now.getFullYear(); }
-  const first = new Date(calYear, calMonth, 1);
-  const startDow = first.getDay();
-  const days = new Date(calYear, calMonth+1, 0).getDate();
-  let h = `<div class="cal-head"><button onclick="calStep(-1)">‹</button><span class="mo">${MONTHNAMES[calMonth]} ${calYear}</span><button onclick="calStep(1)">›</button></div>`;
-  h += `<table class="cal"><tr>${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<th>${d}</th>`).join("")}</tr><tr>`;
-  for(let i=0;i<startDow;i++) h += `<td class="empty"></td>`;
-  for(let day=1; day<=days; day++){
-    const d = new Date(calYear, calMonth, day);
-    const hrs = hoursForDay(d);
-    const isToday = dateKey(d) === dateKey(now);
-    const key = dateKey(d);
-    const isSpecial = HOURS?.special && HOURS.special[key];
-    let cls = "";
-    if(hrs?.closed) cls = "closed";
-    else if(isSpecial) cls = "special";
-    if(isToday) cls += " today";
-    let hrsTxt = "";
-    if(!hrs) hrsTxt = "";
-    else if(hrs.closed) hrsTxt = `<div class="cal-hrs closed">Closed</div>`;
-    else hrsTxt = `<div class="cal-hrs ${isSpecial ? "special" : ""}">${fmtClock(hrs.open)}<br>${fmtClock(hrs.close)}</div>`;
-    h += `<td class="${cls.trim()}"><div class="cal-day">${day}</div>${hrsTxt}</td>`;
-    if((startDow + day) % 7 === 0 && day !== days) h += `</tr><tr>`;
-  }
-  const pad = (startDow + days) % 7;
-  if(pad) for(let i=pad;i<7;i++) h += `<td class="empty"></td>`;
-  h += `</tr></table>`;
-  el.innerHTML = h;
+  const el=document.getElementById("calendar");const now=pacificNow();
+  if(calMonth===null){calMonth=now.getMonth();calYear=now.getFullYear();}
+  const first=new Date(calYear,calMonth,1);const startDow=first.getDay();const days=new Date(calYear,calMonth+1,0).getDate();
+  let h='<div class="cal-head"><button onclick="calStep(-1)">‹</button><span class="mo">'+MONTHNAMES[calMonth]+' '+calYear+'</span><button onclick="calStep(1)">›</button></div>';
+  h+='<table class="cal"><tr>';["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>h+='<th>'+d+'</th>');h+='</tr><tr>';
+  for(let i=0;i<startDow;i++)h+='<td class="empty"></td>';
+  for(let day=1;day<=days;day++){const d=new Date(calYear,calMonth,day);const hrs=hoursForDay(d);
+    const isToday=dateKey(d)===dateKey(now);const key=dateKey(d);const isSpecial=HOURS&&HOURS.special&&HOURS.special[key];
+    let cls="";if(hrs&&hrs.closed)cls="closed";else if(isSpecial)cls="special";if(isToday)cls+=" today";
+    let hrsTxt="";if(!hrs)hrsTxt="";else if(hrs.closed)hrsTxt='<div class="cal-hrs closed">Closed</div>';
+      else hrsTxt='<div class="cal-hrs'+(isSpecial?' special':'')+'">'+fmtClock(hrs.open)+'–'+fmtClock(hrs.close)+'</div>';
+    h+='<td class="'+cls.trim()+'"><div class="cal-day">'+day+'</div>'+hrsTxt+'</td>';
+    if((startDow+day)%7===0)h+='</tr><tr>';}
+  h+='</tr></table><div class="cal-legend"><span><span class="cal-dot" style="background:rgba(255,191,63,.4)"></span>Special</span><span><span class="cal-dot" style="background:rgba(216,53,42,.3)"></span>Closed</span><span><span class="cal-dot" style="border:2px solid var(--gold);width:10px;height:10px"></span>Today</span></div>';
+  el.innerHTML=h;
 }
+function calStep(n){calMonth+=n;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 
-function calStep(n){
-  calMonth += n;
-  if(calMonth < 0){ calMonth = 11; calYear--; }
-  if(calMonth > 11){ calMonth = 0; calYear++; }
-  renderCalendar();
-}
+function setFacility(f){FACILITY=f;
+  document.getElementById("tab-arc").classList.toggle("on",f==="ARC Access");
+  document.getElementById("tab-pool").classList.toggle("on",f==="Recreation Pool");
+  renderBoard();renderForecast();renderBest();renderHeat();renderEvents();}
+function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderEvents();renderCalendar();}
 
-function setFacility(f){
-  FACILITY = f;
-  document.getElementById("tab-arc").classList.toggle("on", f === "ARC Access");
-  document.getElementById("tab-pool").classList.toggle("on", f === "Recreation Pool");
-  renderBoard();
-  renderForecast();
-  renderBest();
-  renderHeat();
-  renderEvents();
-}
-
-function renderAll(){
-  renderHours();
-  renderBoard();
-  renderForecast();
-  renderBest();
-  renderHeat();
-  renderEvents();
-  renderCalendar();
-}
-
-fetch(HOURSURL + "?t=" + Date.now())
-  .then(r => r.ok ? r.json() : null)
-  .then(H => { if(H){ HOURS = H; renderHours(); renderCalendar(); } })
-  .catch(()=>{});
-
-fetch(EVENTSURL + "?t=" + Date.now())
-  .then(r => r.ok ? r.json() : null)
-  .then(E => { if(E){ EVENTS = E; renderEvents(); } })
-  .catch(()=>{});
-
-fetch(CSVURL + "?t=" + Date.now())
-  .then(r => { if(!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-  .then(text => {
-    const rows = parseCSV(text);
-    if(!rows.length) throw new Error("No data yet");
-    DATA = analyze(rows);
-    renderAll();
-    const st = document.getElementById("statusbar");
-    st.className = "statusbar ok";
-    st.textContent = "Live data loaded: " + rows.length + " readings";
-    setTimeout(()=>st.style.display="none", 2200);
-    const last = Math.max(...Object.values(DATA).map(z => z.lastDT.getTime()));
-    document.getElementById("freshness").textContent = "Latest reading " + new Date(last).toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
-  })
-  .catch(e => {
-    const st = document.getElementById("statusbar");
-    st.className = "statusbar err";
-    st.textContent = "Couldn't load data: " + e.message;
-  });
+fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
+fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
+  const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
+  DATA=analyze(rows);renderAll();
+  const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
+  const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
+  document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
+}).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
 </script>
-</body>
-</html>
+</body></html>
