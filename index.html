@@ -38,7 +38,7 @@
   .tabs button{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;padding:12px 30px;background:transparent;color:rgba(247,249,251,.5);border:none;border-bottom:3px solid transparent;cursor:pointer;transition:.15s}
   .tabs button.on{color:var(--white);border-bottom-color:var(--gold)}
 
-  main{padding-top:16px}
+  main{padding-top:8px}
   section{padding:26px 0;border-bottom:1px solid var(--line)}
   section:last-child{border-bottom:none}
   .eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-d);margin-bottom:16px;display:flex;align-items:center;gap:10px}
@@ -55,8 +55,7 @@
   .board .when{font-family:'Space Mono',monospace;font-size:11px;color:rgba(247,249,251,.5);margin-top:10px;letter-spacing:.03em}
   .board .tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px;margin-top:12px;font-weight:700}
 
-  /* top level hours area */
-  .top-hours-box{margin-bottom:20px}
+  /* hours pill */
   .hours-pill{display:inline-flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:100px;padding:10px 18px;font-family:'Space Mono',monospace;font-size:13px;box-shadow:0 1px 3px rgba(15,34,51,.06)}
   .hours-pill .st{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
   .hours-pill .st.open{color:var(--calm)}.hours-pill .st.closed{color:var(--hot)}
@@ -67,18 +66,18 @@
   .fc-wrap{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(15,34,51,.05)}
   .fc-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:6px}
   .fc-head .t{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.03em}
-  .fc-head .sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);text-transform:none}
+  .fc-head .sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
   .fc-tip{font-family:'Space Mono',monospace;font-size:12px;min-height:18px;margin-top:10px;color:var(--ink)}
   .fc-tip b{color:var(--gold-d)}
 
-  /* seamless heatmap layout */
-  .heatwrap{overflow-x:auto;padding-bottom:6px;border-radius:6px}
-  table.heat{border-collapse:collapse;border-spacing:0;font-family:'Space Mono',monospace;font-size:10px;width:100%;min-width:650px}
-  table.heat th{font-weight:400;color:var(--muted);padding:6px 4px;text-align:center}
-  table.heat td{width:auto;height:28px;text-align:center;border:none;padding:0;font-weight:700}
+  /* heatmap */
+  .heatwrap{overflow-x:auto;padding-bottom:6px}
+  table.heat{border-collapse:collapse;font-family:'Space Mono',monospace;font-size:10px}
+  table.heat th{font-weight:400;color:var(--muted);padding:3px 4px;text-align:center}
+  table.heat td{width:26px;height:22px;text-align:center;border:1px solid var(--white);border-radius:2px}
   .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
   .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
-  .heat-legend .hl-note{color:var(--muted);margin-left:4px}
+  .heat-legend .hl-note{color:var(--line);margin-left:4px}
 
   /* best times per day */
   .bt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
@@ -134,19 +133,15 @@
   </div>
 </div></header>
 <main class="wrap">
-  <div class="top-hours-box">
-    <div id="hoursBanner"></div>
-  </div>
-
-  <section><div class="eyebrow">Right now</div><div id="board"></div></section>
+  <section><div class="eyebrow">Right now</div><div id="board"></div><div id="hoursBanner" style="margin-top:14px"></div></section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
   <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
   <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
   <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
-    <div class="heat-legend"><span>Quieter (0-10%)</span>
-      <span class="hl-swatch" style="background:#16a34a"></span><span class="hl-swatch" style="background:#84cc16"></span>
-      <span class="hl-swatch" style="background:#eab308"></span><span class="hl-swatch" style="background:#ea580c"></span>
-      <span class="hl-swatch" style="background:#dc2626"></span><span>Busier (75%+)</span>
+    <div class="heat-legend"><span>Quieter</span>
+      <span class="hl-swatch" style="background:#eef3f7"></span><span class="hl-swatch" style="background:#cfe0d3"></span>
+      <span class="hl-swatch" style="background:#f0d68a"></span><span class="hl-swatch" style="background:#e8a566"></span>
+      <span class="hl-swatch" style="background:#d8352a"></span><span>Busier</span>
       <span class="hl-note">· % full · blank = no data yet</span></div>
   </section>
   <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
@@ -162,9 +157,7 @@ const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Su
 const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHABBR=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
-
-// Highly differentiable classic structural spectrum mapping from green to red
-const HEATCOLOR=p=>p<8?"#16a34a":p<20?"#84cc16":p<35?"#eab308":p<55?"#ea580c":"#dc2626";
+const HEATCOLOR=p=>p<8?"#eef3f7":p<20?"#cfe0d3":p<35?"#f0d68a":p<55?"#e8a566":"#d8352a";
 const LOADCOLOR=p=>p<25?"#2fa36b":p<50?"#e8a72c":p<75?"#e0692f":"#d8352a";
 let DATA={},HOURS=null,EVENTS=null,FACILITY="ARC Access";
 
@@ -199,6 +192,7 @@ function analyze(rows){
     const verdict=z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
     const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
     const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
+    // best time per day (quietest open hour 7-20)
     const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
     out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
   }
@@ -211,7 +205,7 @@ function renderBoard(){
   const n=z.now;const col=LOADCOLOR(n.pct);
   const tcbg=n.verdict.includes("Quiet")?"rgba(47,163,107,.2)":n.verdict.includes("Busier")?"rgba(216,53,42,.2)":"rgba(232,167,44,.2)";
   const tccol=n.verdict.includes("Quiet")?"#7fe0b0":n.verdict.includes("Busier")?"#f5a89f":"#f0cd7e";
-  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+' people</span></div>'+
+  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+'</span></div>'+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<div class="pctbar"><span style="width:'+Math.min(100,n.pct)+'%;background:'+col+'"></span></div>'+
     '<div class="when">'+Math.round(n.pct)+'% full · usually ~'+Math.round(n.normal)+'% · '+DOWFULL[n.now?n.dow:n.dow]+' '+fmtH(n.hour)+'</div>'+
@@ -233,9 +227,7 @@ function renderForecast(){
   fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="4.5" fill="'+LOADCOLOR(f.pct)+'" stroke="#0f2233" stroke-width="1.5" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
     if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-8)+'" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#5f7488">'+fmtH(f.h)+'</text>';});
   const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(255,191,63,0.16)"/><path d="'+line+'" fill="none" stroke="#e0a01a" stroke-width="2.5"/>'+dots+xlab+'</svg>';
-  
-  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">the percentages are the number of people in the arc divided by the total occupancy</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
-  
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted % full · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
   el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
     const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.max*p/100);
     const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
@@ -256,14 +248,14 @@ function renderHeat(){
   const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
   let h='<table class="heat"><tr><th></th>';for(let hr=6;hr<24;hr++)h+='<th>'+fmtH(hr)+'</th>';h+='</tr>';
   for(let d=0;d<7;d++){h+='<tr><th style="text-align:right;padding-right:8px">'+DOW[d]+'</th>';
-    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f7f9fb":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#fff");
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f7f9fb":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#0f2233");
       h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':Math.round(p)+'%')+'">'+(p==null?'':Math.round(p))+'</td>';}h+='</tr>';}
   h+='</table>';document.getElementById("heat").innerHTML=h;
 }
 
+/* hours */
 function hoursForDay(d){if(!HOURS)return null;const key=dateKey(d);if(HOURS.special&&HOURS.special[key])return HOURS.special[key];
   const weekend=(d.getDay()===0||d.getDay()===6);const set=isSummer(d)?HOURS.summer:HOURS.regular;return weekend?set.weekend:set.weekday;}
-
 function renderHours(){
   const el=document.getElementById("hoursBanner");if(!HOURS){el.innerHTML='';return;}
   const now=pacificNow();const today=hoursForDay(now);let html="";
@@ -276,10 +268,11 @@ function renderHours(){
   const warns=[];for(let i=1;i<=7;i++){const d=new Date(now);d.setDate(now.getDate()+i);const k=dateKey(d);
     if(HOURS.special&&HOURS.special[k]){const s=HOURS.special[k];const lbl=DOW[(d.getDay()+6)%7]+' '+MONTHABBR[d.getMonth()]+' '+d.getDate();
       warns.push(s.closed?'<b>'+lbl+':</b> closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
-  if(warns.length)html+='<div class="hours-warn">Upcoming Adjustments · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
+  if(warns.length)html+='<div class="hours-warn">Heads up · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
   el.innerHTML=html;
 }
 
+/* events (from events.json if present) */
 function renderEvents(){
   const sec=document.getElementById("sec-events");const el=document.getElementById("events");
   if(FACILITY!=="ARC Access"||!EVENTS||!EVENTS.days){sec.classList.add("hidden");return;}
@@ -292,6 +285,7 @@ function renderEvents(){
   h+='</div>';el.innerHTML=h;
 }
 
+/* calendar */
 let calMonth=null,calYear=null;
 function renderCalendar(){
   const el=document.getElementById("calendar");const now=pacificNow();
