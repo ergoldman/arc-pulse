@@ -1,7 +1,7 @@
 name: ARC Occupancy Logger
 on:
   schedule:
-    - cron: "*/15 * * * *"   # every 15 min; commits to data branch = no deploy
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -37,24 +37,32 @@ jobs:
       - name: Scrape ARC hours (updates hours.json)
         run: python scrape_hours.py || echo "hours scrape failed, continuing"
 
-      - name: Copy CSV aside, then commit it to the data branch
+      - name: Commit data + hours to the data branch
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          # 1) Save the freshly-updated files outside the repo tree
-          cp arc_occupancy.csv /tmp/arc_occupancy.csv
-          cp hours.json /tmp/hours.json 2>/dev/null || true
-          # 2) Switch to a clean data branch (discard main's working changes)
-          git checkout -- . || true
-          git fetch origin data || true
-          if git show-ref --verify --quiet refs/remotes/origin/data; then
-            git checkout -B data origin/data
-          else
-            git checkout -B data
-          fi
-          # 3) Drop the saved files back in and commit them
-          cp /tmp/arc_occupancy.csv arc_occupancy.csv
-          cp /tmp/hours.json hours.json 2>/dev/null || true
+
+          # Stash the two output files completely outside the git working tree.
+          mkdir -p /tmp/out
+          cp arc_occupancy.csv /tmp/out/arc_occupancy.csv
+          cp hours.json /tmp/out/hours.json 2>/dev/null || true
+
+          # Move to a SEPARATE clean directory and do all branch work there,
+          # so nothing in the current working tree can cause a checkout conflict.
+          cd /tmp
+          rm -rf datawork
+          git clone --branch data "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" datawork 2>/dev/null \
+            || git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" datawork
+          cd datawork
+          # If data branch didn't exist, create it as an orphan
+          git checkout data 2>/dev/null || git checkout --orphan data
+          # Copy the fresh outputs in
+          cp /tmp/out/arc_occupancy.csv arc_occupancy.csv
+          cp /tmp/out/hours.json hours.json 2>/dev/null || true
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
           git add arc_occupancy.csv hours.json
           git commit -m "Log occupancy $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
           git push origin data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
