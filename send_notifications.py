@@ -48,6 +48,44 @@ def get_subscriptions():
         return []
     return r.json().get("record", {}).get("subscriptions", [])
 
+def save_subscriptions(subs):
+    """Write the (possibly updated) subscriber list back to jsonbin — used to
+    persist per-subscriber 'already sent today' state for personalized alerts."""
+    import requests
+    bin_id = os.environ["JSONBIN_ID"]
+    key = os.environ["JSONBIN_KEY"]
+    requests.put(f"https://api.jsonbin.io/v3/b/{bin_id}",
+                 headers={"Content-Type": "application/json", "X-Master-Key": key},
+                 json={"subscriptions": subs}, timeout=15)
+
+def hour_average(csv_lines, facility_name, target_dow, target_hour):
+    """Historical average % full for this exact weekday+hour, real non-zero
+    readings only."""
+    vals = []
+    for line in csv_lines[1:]:
+        parts = line.split(",")
+        if len(parts) < 7 or parts[2] != facility_name:
+            continue
+        try:
+            pct = float(parts[6])
+            if pct <= 0:
+                continue
+            pac = to_pacific(parts[0])
+        except Exception:
+            continue
+        if pac.weekday() != target_dow or pac.hour != target_hour:
+            continue
+        vals.append(pct)
+    if not vals:
+        return None
+    return sum(vals) / len(vals)
+
+def crowd_label(pct):
+    if pct < 25: return "quiet"
+    if pct < 50: return "moderate"
+    if pct < 75: return "busy"
+    return "packed"
+
 def send_push(sub, title, body, tag):
     from pywebpush import webpush, WebPushException
     try:
@@ -201,6 +239,53 @@ def main():
             if send_push(sub, title, body, tag):
                 sent += 1
         print(f"  sent to {sent}/{len(subs_raw)} subscribers (after preference filter)")
+
+    # ---- Personalized: "my favorite time to go" reminder ----------------
+    # Each subscriber picks their own facility + hour. This now fires in the
+    # SAME window as that facility's "opening soon + forecast" notification
+    # (i.e. once, shortly before opening) — so people check their phone once
+    # in the morning and get both, rather than a separate later-day ping.
+    # The content is still about their chosen hour's predicted crowd level;
+    # only the TIMING is tied to opening. De-dup is PER SUBSCRIBER (stored on
+    # their own record, favorite_last_sent), since each person's choice differs.
+    cur_min = now.hour * 60 + now.minute
+    subs_changed = False
+    for entry in subs_raw:
+        prefs = entry.get("prefs", {})
+        if not prefs.get("favoriteEnabled"):
+            continue
+        fac_name = prefs.get("favoriteFacility") or "ARC Access"
+        hour = prefs.get("favoriteHour")
+        if hour is None:
+            continue
+        if entry.get("favorite_last_sent") == today_key:
+            continue  # already sent today for this person
+
+        fac_cfg = FACILITIES.get(fac_name)
+        hset = hours_all.get(fac_cfg["hours_key"]) if fac_cfg else None
+        if not hset:
+            continue  # no hours data for their chosen facility yet
+        today_hours = hours_for_day(hset, now)
+        if today_hours.get("closed"):
+            continue  # facility closed today — nothing to send
+        open_m = hm_to_minutes(today_hours["open"])
+        if not (0 <= open_m - cur_min <= OPENING_WINDOW_MIN):
+            continue  # not yet in the pre-opening window
+
+        label = fac_cfg["label"]
+        avg = hour_average(csv_lines, fac_name, now.weekday(), int(hour))
+        if avg is not None:
+            body = f"At {fmt_hour(int(hour))}, {label} is usually ~{avg:.0f}% full — {crowd_label(avg)}."
+        else:
+            body = f"Your {fmt_hour(int(hour))} {label} check-in is coming up — not enough data yet to predict the crowd."
+        sub = entry.get("sub", entry)
+        print(f"Sending [favorite]: {label} @ {fmt_hour(int(hour))} — {body}")
+        if send_push(sub, f"Your {fmt_hour(int(hour))} {label} reminder", body, f"{fac_name}-favorite"):
+            entry["favorite_last_sent"] = today_key
+            subs_changed = True
+
+    if subs_changed:
+        save_subscriptions(subs_raw)
 
     state = {k: v for k, v in state.items() if k >= (now - timedelta(days=2)).strftime("%Y-%m-%d")}
     state[today_key] = today_state
