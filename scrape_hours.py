@@ -113,8 +113,10 @@ def main():
     print("Scraping Pool hours...")
     pool_scraped = try_scrape(POOL_URL)
 
-    arc_special = arc_scraped if arc_scraped else ARC_SPECIAL
-    pool_special = pool_scraped if pool_scraped else POOL_SPECIAL
+    # Guard against PARTIAL scrapes (e.g. only catching one visible date):
+    # only trust a live scrape if it found a reasonably complete set of dates.
+    arc_special = arc_scraped if len(arc_scraped) >= 15 else ARC_SPECIAL
+    pool_special = pool_scraped if len(pool_scraped) >= 5 else POOL_SPECIAL
 
     result = {
         "status":"ok",
