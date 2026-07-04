@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+
 ARC Hours Scraper
 -----------------
 Fetches the ARC hours page, parses regular + summer + special/holiday hours,
