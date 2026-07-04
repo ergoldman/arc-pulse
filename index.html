@@ -238,7 +238,16 @@ function renderHeat(){
 }
 
 /* hours — per facility (arc vs pool) */
-function hoursSetFor(){ return HOURS ? HOURS[facKey()] : null; }
+function hoursSetFor(){
+  if(!HOURS)return null;
+  // New format: {arc:{...}, pool:{...}}. Old format: flat {regular,summer,special} (ARC only).
+  if(HOURS.arc || HOURS.pool){
+    return HOURS[facKey()] || null;
+  }
+  // Old/flat format: only valid for the ARC tab; Pool has no data until re-scraped.
+  if(facKey()==="arc" && HOURS.regular) return HOURS;
+  return null;
+}
 function hoursForDay(d){
   const set=hoursSetFor();if(!set)return null;
   const key=dateKey(d);
@@ -271,6 +280,7 @@ function renderHours(){
 let calMonth=null,calYear=null;
 function renderCalendar(){
   const el=document.getElementById("calendar");const set=hoursSetFor();const now=pacificNow();
+  if(!set){el.innerHTML='<div style="color:var(--sub);font-size:14px">Hours data unavailable for this facility right now — check back soon.</div>';return;}
   if(calMonth===null){calMonth=now.getMonth();calYear=now.getFullYear();}
   const first=new Date(calYear,calMonth,1);const startDow=first.getDay();const days=new Date(calYear,calMonth+1,0).getDate();
   let h='<div class="cal-head"><button onclick="calStep(-1)">‹</button><span class="mo">'+MONTHNAMES[calMonth]+' '+calYear+'</span><button onclick="calStep(1)">›</button></div>';
