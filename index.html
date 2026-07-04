@@ -28,6 +28,11 @@
   .brand .live .dot{width:7px;height:7px;border-radius:50%;background:var(--calm)}
   .notify-btn{font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;background:var(--card);border:1px solid var(--line);border-radius:100px;padding:7px 14px;cursor:pointer;color:var(--ink)}
   .notify-btn.on{background:var(--blue-d);color:#fff;border-color:var(--blue-d)}
+  .prefs-panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0;box-shadow:0 4px 16px rgba(17,24,39,.08);max-width:340px}
+  .prefs-title{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px}
+  .prefs-row{display:flex;align-items:center;gap:9px;font-size:13.5px;padding:6px 0;cursor:pointer}
+  .prefs-row input{width:16px;height:16px;accent-color:var(--blue-d)}
+  .prefs-save{margin-top:10px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;background:var(--blue-d);color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer}
   .tabs{display:flex;gap:4px;margin-top:16px}
   .tabs button{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;padding:10px 20px;background:transparent;color:var(--sub);border:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:.15s;border-radius:6px 6px 0 0}
   .tabs button.on{color:var(--blue-d);border-bottom-color:var(--blue-d);background:rgba(20,73,168,.05)}
@@ -109,12 +114,22 @@
     <span class="logo">ARC <span>Pulse</span></span>
     <span class="live"><span class="dot pulse"></span> Live</span>
     <button id="notifyBtn" class="notify-btn" onclick="toggleNotifications()" title="Get notified">🔔 Notify me</button>
+    <button id="prefsBtn" class="notify-btn hidden" onclick="togglePrefsPanel()" title="Notification settings">⚙️</button>
   </div>
   <div class="tabs">
     <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
     <button id="tab-pool" onclick="setFacility('Recreation Pool')">Pool</button>
   </div>
 </div></header>
+<div class="wrap">
+  <div id="prefsPanel" class="prefs-panel hidden">
+    <div class="prefs-title">Notify me about:</div>
+    <label class="prefs-row"><input type="checkbox" id="pref-closing" checked> Closing soon</label>
+    <label class="prefs-row"><input type="checkbox" id="pref-opening" checked> Opening soon + today's forecast (quietest &amp; busiest times)</label>
+    <label class="prefs-row"><input type="checkbox" id="pref-tomorrow" checked> Holiday / special hours heads-up</label>
+    <button class="prefs-save" onclick="savePrefs()">Save</button>
+  </div>
+</div>
 <main class="wrap">
   <section><div class="eyebrow">Right now</div><div id="board"></div><div id="hoursBanner" style="margin-top:14px"></div></section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
@@ -347,9 +362,39 @@ async function saveSubs(list){
     headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
     body:JSON.stringify({subscriptions:list})});
 }
+const DEFAULT_PREFS={closing:true,opening:true,tomorrow:true};
+function readPrefsFromForm(){
+  return {
+    closing:document.getElementById("pref-closing").checked,
+    opening:document.getElementById("pref-opening").checked,
+    tomorrow:document.getElementById("pref-tomorrow").checked,
+  };
+}
+function fillPrefsForm(prefs){
+  document.getElementById("pref-closing").checked=prefs.closing!==false;
+  document.getElementById("pref-opening").checked=prefs.opening!==false;
+  document.getElementById("pref-tomorrow").checked=prefs.tomorrow!==false;
+}
+function togglePrefsPanel(){
+  document.getElementById("prefsPanel").classList.toggle("hidden");
+}
+async function savePrefs(){
+  try{
+    const reg=await navigator.serviceWorker.getRegistration();
+    const existing=reg && await reg.pushManager.getSubscription();
+    if(!existing){alert("Enable notifications first.");return;}
+    const prefs=readPrefsFromForm();
+    const subs=await getSubs();
+    const entry=subs.find(s=>s.sub && s.sub.endpoint===existing.endpoint);
+    if(entry){entry.prefs=prefs;}else{subs.push({sub:existing.toJSON(),prefs});}
+    await saveSubs(subs);
+    document.getElementById("prefsPanel").classList.add("hidden");
+  }catch(e){alert("Couldn't save preferences: "+e.message);}
+}
 
 async function toggleNotifications(){
   const btn=document.getElementById("notifyBtn");
+  const prefsBtn=document.getElementById("prefsBtn");
   if(!('serviceWorker' in navigator)||!('PushManager' in window)){
     alert("Notifications aren't supported in this browser.\n\nOn iPhone: add this site to your Home Screen first (Share → Add to Home Screen), then try again from the home-screen app.");
     return;
@@ -362,8 +407,10 @@ async function toggleNotifications(){
       const endpoint=existing.endpoint;
       await existing.unsubscribe();
       const subs=await getSubs();
-      await saveSubs(subs.filter(s=>s.endpoint!==endpoint));
+      await saveSubs(subs.filter(s=>(s.sub&&s.sub.endpoint)!==endpoint));
       btn.classList.remove("on");btn.textContent="🔔 Notify me";
+      prefsBtn.classList.add("hidden");
+      document.getElementById("prefsPanel").classList.add("hidden");
       return;
     }
     const perm=await Notification.requestPermission();
@@ -374,19 +421,29 @@ async function toggleNotifications(){
     });
     const subJson=sub.toJSON();
     const subs=await getSubs();
-    if(!subs.find(s=>s.endpoint===subJson.endpoint)){
-      subs.push(subJson);
+    if(!subs.find(s=>s.sub&&s.sub.endpoint===subJson.endpoint)){
+      subs.push({sub:subJson,prefs:{...DEFAULT_PREFS}});
       await saveSubs(subs);
     }
     btn.classList.add("on");btn.textContent="🔔 Subscribed";
+    prefsBtn.classList.remove("hidden");
+    fillPrefsForm(DEFAULT_PREFS);
   }catch(e){
     alert("Couldn't enable notifications: "+e.message);
   }
 }
 // Reflect current subscription state on load
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(reg=>reg.pushManager.getSubscription()).then(sub=>{
-    if(sub){const btn=document.getElementById("notifyBtn");if(btn){btn.classList.add("on");btn.textContent="🔔 Subscribed";}}
+  navigator.serviceWorker.register('sw.js').then(reg=>reg.pushManager.getSubscription()).then(async sub=>{
+    if(sub){
+      const btn=document.getElementById("notifyBtn");if(btn){btn.classList.add("on");btn.textContent="🔔 Subscribed";}
+      const prefsBtn=document.getElementById("prefsBtn");if(prefsBtn)prefsBtn.classList.remove("hidden");
+      try{
+        const subs=await getSubs();
+        const entry=subs.find(s=>s.sub&&s.sub.endpoint===sub.endpoint);
+        fillPrefsForm(entry&&entry.prefs?entry.prefs:DEFAULT_PREFS);
+      }catch(e){}
+    }
   }).catch(()=>{});
 }
 </script>
