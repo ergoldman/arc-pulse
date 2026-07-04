@@ -5,620 +5,136 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>ARC Pulse — UC Davis</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-  
-  :root {
-    --primary: #1D4ED8;
-    --success: #22C55E;
-    --warning: #F59E0B;
-    --danger: #EF4444;
-    --background: #F5F7FA;
-    --card: #FFFFFF;
-    --text: #111827;
-    --secondary: #6B7280;
-    --border: #E5E7EB;
-  }
-
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    background: var(--background);
-    color: var(--text);
-    font-family: 'Inter', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    line-height: 1.6;
-    padding-bottom: 40px;
-  }
-
-  .wrap {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  /* Premium Apple/Spotify Style Header */
-  header {
-    padding: 40px 0 20px;
-    background: transparent;
-  }
-  
-  .header-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  @media (min-width: 640px) {
-    .header-container {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-  }
-
-  .brand {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .brand .logo {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 800;
-    font-size: 32px;
-    letter-spacing: -0.03em;
-    color: var(--text);
-  }
-
-  .brand .logo em {
-    color: var(--primary);
-    font-style: normal;
-  }
-
-  .brand .live {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--secondary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .brand .live .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-  }
-
-  /* iOS style Segmented Controls */
-  .tabs {
-    background: #E5E7EB;
-    border-radius: 30px;
-    padding: 4px;
-    display: inline-flex;
-    gap: 2px;
-    align-self: flex-start;
-  }
-
-  .tabs button {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    padding: 8px 24px;
-    background: transparent;
-    color: var(--secondary);
-    border: none;
-    border-radius: 26px;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .tabs button.on {
-    background: var(--card);
-    color: var(--text);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  }
-
-  /* Layout Structure */
-  main {
-    padding-top: 12px;
-  }
-
-  .hours-top-container {
-    margin-bottom: 24px;
-  }
-
-  section {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 24px;
-    border: 1px solid var(--border);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  section:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.05);
-  }
-
-  .eyebrow {
-    font-family: 'Manrope', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-  }
-
-  /* Premium Occupancy Board */
-  .board {
-    background: transparent;
-    padding: 0;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: none;
-  }
-
-  .board .count {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-    font-size: 54px;
-    line-height: 1;
-    color: var(--text);
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    letter-spacing: -0.02em;
-  }
-
-  .board .count .of {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--secondary);
-    letter-spacing: normal;
-  }
-
-  .board .meta {
-    width: 100%;
-  }
-
-  .board .verdict {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    letter-spacing: -0.01em;
-    margin-bottom: 6px;
-  }
-
-  .board .pctbar {
-    height: 12px;
-    background: #E5E7EB;
-    border-radius: 6px;
-    margin: 14px 0;
-    overflow: hidden;
-  }
-
-  .board .pctbar span {
-    display: block;
-    height: 100%;
-    border-radius: 6px;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .board .when {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: var(--secondary);
-    margin-top: 8px;
-  }
-
-  .board .tag {
-    display: inline-block;
-    font-family: 'Manrope', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-top: 8px;
-  }
-
-  /* Status Pill & Top-level Warnings */
-  .hours-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 20px;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-    width: 100%;
-  }
-
-  .hours-pill .st {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-  }
-  
-  .hours-pill .st.open { color: var(--success); }
-  .hours-pill .st.closed { color: var(--danger); }
-  
-  .hours-warn {
-    margin-top: 10px;
-    background: rgba(245, 158, 11, 0.08);
-    padding: 14px 18px;
-    font-size: 13px;
-    color: #B45309;
-    border-radius: 14px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    border: 1px solid rgba(245, 158, 11, 0.15);
-  }
-
-  .hours-warn.closing {
-    background: rgba(239, 68, 68, 0.08);
-    color: var(--danger);
-    border-color: rgba(239, 68, 68, 0.15);
-  }
-
-  /* Forecast Visualization */
-  .fc-wrap {
-    background: transparent;
-    border: none;
-    padding: 0;
-    box-shadow: none;
-  }
-
-  .fc-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 16px;
-    gap: 8px;
-  }
-
-  .fc-head .t {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-  }
-
-  .fc-head .sub {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: var(--secondary);
-  }
-
-  .fc-tip {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    min-height: 42px;
-    margin-top: 16px;
-    padding: 10px 14px;
-    background: #F3F4F6;
-    border-radius: 12px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-  }
-  
-  .fc-tip b {
-    color: var(--primary);
-  }
-
-  /* Distinct Color-Differentiable Heatmap */
-  .heatwrap {
-    overflow-x: auto;
-    padding-bottom: 6px;
-  }
-
-  table.heat {
-    border-collapse: collapse;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    width: 100%;
-  }
-
-  table.heat th {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
-    color: var(--secondary);
-    padding: 8px 4px;
-    text-align: center;
-  }
-
-  table.heat td {
-    width: 28px;
-    height: 26px;
-    text-align: center;
-    border: 3px solid var(--card);
-    border-radius: 8px;
-    font-weight: 700;
-  }
-
-  .heat-legend {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 18px;
-    flex-wrap: wrap;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: var(--secondary);
-  }
-
-  .heat-legend .hl-swatch {
-    width: 24px;
-    height: 16px;
-    border-radius: 4px;
-    display: inline-block;
-  }
-
-  .heat-legend .hl-note {
-    color: var(--secondary);
-    margin-left: auto;
-    font-size: 11px;
-  }
-
-  /* Best Times Grid Matrix */
-  .bt-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
-    gap: 10px;
-  }
-
-  .bt-day {
-    background: #F8FAFC;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px 10px;
-    text-align: center;
-  }
-
-  .bt-day .d {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: var(--secondary);
-  }
-
-  .bt-day .time {
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--text);
-    margin: 4px 0 2px;
-  }
-
-  .bt-day .pct {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--success);
-  }
-
-  /* Schedule Cards */
-  .ev-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .ev-item {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    background: #F8FAFC;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-  }
-
-  .ev-time {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--primary);
-    white-space: nowrap;
-    min-width: 100px;
-  }
-
-  .ev-body .title {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text);
-  }
-
-  .ev-body .loc {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: var(--secondary);
-    margin-top: 1px;
-  }
-
-  /* Notion Style Calendar Interface */
-  .cal-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-
-  .cal-head button {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    background: #E5E7EB;
-    color: var(--text);
-    border: none;
-    border-radius: 8px;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s;
-  }
-  
-  .cal-head button:hover {
-    background: #D1D5DB;
-  }
-
-  .cal-head .mo {
-    font-family: 'Manrope', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-  }
-
-  table.cal {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 4px;
-    table-layout: fixed;
-  }
-
-  table.cal th {
-    font-family: 'Manrope', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--secondary);
-    padding-bottom: 6px;
-  }
-
-  table.cal td {
-    border: 1px solid var(--border);
-    vertical-align: top;
-    height: 54px;
-    padding: 6px;
-    background: var(--card);
-    border-radius: 10px;
-  }
-
-  table.cal td.empty { background: transparent; border: none; }
-  
-  table.cal td.today {
-    border: 2px solid var(--primary);
-    background: rgba(29, 78, 216, 0.03);
-  }
-  
-  table.cal td.today .cal-day {
-    background: var(--primary);
-    color: #FFFFFF;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-  }
-
-  table.cal td.closed { background: #F3F4F6; }
-  table.cal td.special { background: rgba(245, 158, 11, 0.06); }
-
-  .cal-day {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .cal-hrs {
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    color: var(--secondary);
-    margin-top: 2px;
-    line-height: 1.2;
-  }
-
-  .cal-hrs.closed { color: var(--danger); font-weight: 600; }
-  .cal-hrs.special { color: var(--warning); font-weight: 500; }
-
-  .cal-legend {
-    display: flex;
-    gap: 14px;
-    margin-top: 14px;
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    color: var(--secondary);
-    flex-wrap: wrap;
-  }
-
-  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .cal-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-
-  /* Notification Alerts */
-  .hidden { display: none !important; }
-  
-  .statusbar {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 8px 16px;
-    text-align: center;
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 0 0 12px 12px;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-  
-  .statusbar.loading { background: var(--warning); color: #000; }
-  .statusbar.ok { background: var(--success); color: #fff; }
-  .statusbar.err { background: var(--danger); color: #fff; }
-
-  footer {
-    background: transparent;
-    color: var(--secondary);
-    padding: 32px 0;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    line-height: 1.6;
-    margin-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .pulse { animation: pl 2s ease-in-out infinite; }
-    @keyframes pl { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-  }
+  /* Athletic/scoreboard identity: condensed display + geometric body + mono data */
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{
+    --navy:#0f2233;      /* deep aggie ink */
+    --navy2:#16324a;
+    --white:#f7f9fb;
+    --card:#ffffff;
+    --gold:#ffbf3f;      /* bright aggie gold - energy */
+    --gold-d:#e0a01a;
+    --ice:#dce7f0;
+    --line:#c9d6e2;
+    --calm:#2fa36b;      /* live states */
+    --mod:#e8a72c;
+    --busy:#e0692f;
+    --hot:#d8352a;
+    --ink:#0f2233;
+    --muted:#5f7488;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--white);color:var(--ink);font-family:'Barlow',system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+
+  /* header - scoreboard bar */
+  header{background:var(--navy);color:var(--white);padding:20px 0 0}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(30px,6vw,46px);letter-spacing:.01em;text-transform:uppercase;line-height:.9}
+  .brand .logo em{color:var(--gold);font-style:normal}
+  .brand .live{margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:6px}
+  .brand .live .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+  .tabs{display:flex;gap:0;margin-top:18px}
+  .tabs button{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;padding:12px 30px;background:transparent;color:rgba(247,249,251,.5);border:none;border-bottom:3px solid transparent;cursor:pointer;transition:.15s}
+  .tabs button.on{color:var(--white);border-bottom-color:var(--gold)}
+
+  main{padding-top:16px}
+  section{padding:26px 0;border-bottom:1px solid var(--line)}
+  section:last-child{border-bottom:none}
+  .eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-d);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  /* SIGNATURE: scoreboard occupancy readout */
+  .board{background:var(--navy);border-radius:10px;padding:26px 28px;color:var(--white);display:flex;align-items:center;gap:28px;flex-wrap:wrap;box-shadow:0 4px 20px rgba(15,34,51,.12)}
+  .board .count{font-family:'Space Mono',monospace;font-weight:700;font-size:clamp(52px,12vw,80px);line-height:.85;color:var(--gold);letter-spacing:-.02em}
+  .board .count .of{display:block;font-size:15px;color:rgba(247,249,251,.55);letter-spacing:.05em;margin-top:8px}
+  .board .meta{flex:1;min-width:180px}
+  .board .verdict{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(26px,5vw,34px);text-transform:uppercase;letter-spacing:.02em;line-height:1}
+  .board .pctbar{height:10px;background:rgba(247,249,251,.15);border-radius:5px;margin-top:16px;overflow:hidden}
+  .board .pctbar span{display:block;height:100%;border-radius:5px;transition:width .6s}
+  .board .when{font-family:'Space Mono',monospace;font-size:11px;color:rgba(247,249,251,.5);margin-top:10px;letter-spacing:.03em}
+  .board .tag{display:inline-block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px;margin-top:12px;font-weight:700}
+
+  /* top level hours area */
+  .top-hours-box{margin-bottom:20px}
+  .hours-pill{display:inline-flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:100px;padding:10px 18px;font-family:'Space Mono',monospace;font-size:13px;box-shadow:0 1px 3px rgba(15,34,51,.06)}
+  .hours-pill .st{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
+  .hours-pill .st.open{color:var(--calm)}.hours-pill .st.closed{color:var(--hot)}
+  .hours-warn{margin-top:10px;border-left:3px solid var(--gold-d);background:rgba(255,191,63,.14);padding:9px 13px;font-size:13px;color:#8a6410;border-radius:0 4px 4px 0;font-family:'Barlow',sans-serif}
+  .hours-warn.closing{border-left-color:var(--hot);background:rgba(216,53,42,.09);color:var(--hot)}
+
+  /* forecast */
+  .fc-wrap{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(15,34,51,.05)}
+  .fc-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+  .fc-head .t{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.03em}
+  .fc-head .sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);text-transform:none}
+  .fc-tip{font-family:'Space Mono',monospace;font-size:12px;min-height:18px;margin-top:10px;color:var(--ink)}
+  .fc-tip b{color:var(--gold-d)}
+
+  /* seamless heatmap layout */
+  .heatwrap{overflow-x:auto;padding-bottom:6px;border-radius:6px}
+  table.heat{border-collapse:collapse;border-spacing:0;font-family:'Space Mono',monospace;font-size:10px;width:100%;min-width:650px}
+  table.heat th{font-weight:400;color:var(--muted);padding:6px 4px;text-align:center}
+  table.heat td{width:auto;height:28px;text-align:center;border:none;padding:0;font-weight:700}
+  .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+  .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
+  .heat-legend .hl-note{color:var(--muted);margin-left:4px}
+
+  /* best times per day */
+  .bt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .bt-day{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:14px;text-align:center;box-shadow:0 1px 3px rgba(15,34,51,.05)}
+  .bt-day .d{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .bt-day .time{font-family:'Space Mono',monospace;font-weight:700;font-size:22px;color:var(--navy);margin:6px 0 2px}
+  .bt-day .pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--calm)}
+
+  /* events */
+  .ev-list{display:flex;flex-direction:column;gap:8px}
+  .ev-item{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;box-shadow:0 1px 3px rgba(15,34,51,.04)}
+  .ev-time{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap;min-width:120px}
+  .ev-body .title{font-weight:600;font-size:14px}
+  .ev-body .loc{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold-d);margin-top:2px}
+  .ev-empty{font-family:'Barlow',sans-serif;color:var(--muted);font-size:14px;padding:8px 0}
+
+  /* calendar */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cal-head button{font-family:'Space Mono',monospace;font-size:15px;background:var(--navy);color:var(--white);border:none;border-radius:6px;width:34px;height:34px;cursor:pointer}
+  .cal-head .mo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.04em}
+  table.cal{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed}
+  table.cal th{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);padding:4px 2px;text-transform:uppercase;letter-spacing:.05em}
+  table.cal td{border:1px solid var(--line);vertical-align:top;height:58px;padding:5px;background:var(--card);border-radius:5px}
+  table.cal td.empty{background:transparent;border:none}
+  table.cal td.today{border:2px solid var(--gold);background:rgba(255,191,63,.08)}
+  table.cal td.closed{background:rgba(216,53,42,.08)}
+  table.cal td.special{background:rgba(255,191,63,.14)}
+  .cal-day{font-family:'Space Mono',monospace;font-size:11px;font-weight:700}
+  .cal-hrs{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;line-height:1.3}
+  .cal-hrs.closed{color:var(--hot);font-weight:700}
+  .cal-hrs.special{color:var(--gold-d)}
+  .cal-legend{display:flex;gap:16px;margin-top:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);flex-wrap:wrap}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  .cal-dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  .hidden{display:none}
+  .statusbar{font-family:'Space Mono',monospace;font-size:11px;padding:7px 0;text-align:center;letter-spacing:.05em}
+  .statusbar.loading{background:var(--gold);color:var(--navy)}.statusbar.ok{background:var(--calm);color:#fff}.statusbar.err{background:var(--hot);color:#fff}
+  footer{background:var(--navy);color:rgba(247,249,251,.55);padding:22px 0 44px;font-family:'Space Mono',monospace;font-size:11px;line-height:1.7;margin-top:0}
+  @media (prefers-reduced-motion:no-preference){.pulse{animation:pl 2s ease-in-out infinite}@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}}
 </style>
 </head>
 <body>
 <div id="statusbar" class="statusbar loading">Loading live data…</div>
 <header><div class="wrap">
-  <div class="header-container">
-    <div class="brand">
-      <span class="logo">ARC <em>Pulse</em></span>
-      <span class="live"><span class="dot pulse"></span> Live occupancy · UC Davis</span>
-    </div>
-    <div class="tabs">
-      <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
-      <button id="tab-pool" onclick="setFacility('Recreation Pool')">Pool</button>
-    </div>
+  <div class="brand">
+    <span class="logo">ARC <em>Pulse</em></span>
+    <span class="live"><span class="dot pulse"></span> Live · UC Davis</span>
+  </div>
+  <div class="tabs">
+    <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
+    <button id="tab-pool" onclick="setFacility('Recreation Pool')">Pool</button>
   </div>
 </div></header>
-
 <main class="wrap">
-  <div class="hours-top-container">
+  <div class="top-hours-box">
     <div id="hoursBanner"></div>
   </div>
 
@@ -626,41 +142,30 @@
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
   <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
   <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
-  
-  <section>
-    <div class="eyebrow">Typical week</div>
-    <div class="heatwrap"><div id="heat"></div></div>
-    <div class="heat-legend">
-      <span>Quieter (0-10%)</span>
-      <span class="hl-swatch" style="background:#E5E7EB"></span>
-      <span class="hl-swatch" style="background:#86EFAC"></span>
-      <span class="hl-swatch" style="background:#FDE047"></span>
-      <span class="hl-swatch" style="background:#F97316"></span>
-      <span class="hl-swatch" style="background:#EF4444"></span>
-      <span>Busier (75%+)</span>
-      <span class="hl-note">· % full · blank = no data yet</span>
-    </div>
+  <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
+    <div class="heat-legend"><span>Quieter (0-10%)</span>
+      <span class="hl-swatch" style="background:#16a34a"></span><span class="hl-swatch" style="background:#84cc16"></span>
+      <span class="hl-swatch" style="background:#eab308"></span><span class="hl-swatch" style="background:#ea580c"></span>
+      <span class="hl-swatch" style="background:#dc2626"></span><span>Busier (75%+)</span>
+      <span class="hl-note">· % full · blank = no data yet</span></div>
   </section>
-  
   <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
 </main>
-
 <footer><div class="wrap">
-  ARC PULSE &middot; Live public facility-occupancy data &middot; Aggregate counts only<br/>
+  ARC PULSE · live public facility-occupancy data · aggregate counts only, no personal data<br/>
   <span id="freshness"></span>
 </div></footer>
-
 <script>
 const CSV_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv",HOURS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json",EVENTS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/events.json";
 const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHABBR=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const fmtH=h=>{const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
+const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
 
-// Clear, highly differentiable heatmap color mapping
-const HEATCOLOR=p=>p<8?"#E5E7EB":p<20?"#86EFAC":p<35?"#FDE047":p<55?"#F97316":"#EF4444";
-const LOADCOLOR=p=>p<25?"#22C55E":p<50?"#F59E0B":p<75?"#F97316":"#EF4444";
+// Highly differentiable classic structural spectrum mapping from green to red
+const HEATCOLOR=p=>p<8?"#16a34a":p<20?"#84cc16":p<35?"#eab308":p<55?"#ea580c":"#dc2626";
+const LOADCOLOR=p=>p<25?"#2fa36b":p<50?"#e8a72c":p<75?"#e0692f":"#d8352a";
 let DATA={},HOURS=null,EVENTS=null,FACILITY="ARC Access";
 
 function pacificNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));}
@@ -704,18 +209,18 @@ function renderBoard(){
   const z=DATA[FACILITY];const el=document.getElementById("board");
   if(!z){el.innerHTML='<div class="board">No data yet.</div>';return;}
   const n=z.now;const col=LOADCOLOR(n.pct);
-  const tcbg=n.verdict.includes("Quiet")?"rgba(34,197,94,0.1)":n.verdict.includes("Busier")?"rgba(239,68,68,0.1)":"rgba(245,158,11,0.1)";
-  const tccol=n.verdict.includes("Quiet")?"#22C55E":n.verdict.includes("Busier")?"#EF4444":"#D97706";
-  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+' people inside</span></div>'+
+  const tcbg=n.verdict.includes("Quiet")?"rgba(47,163,107,.2)":n.verdict.includes("Busier")?"rgba(216,53,42,.2)":"rgba(232,167,44,.2)";
+  const tccol=n.verdict.includes("Quiet")?"#7fe0b0":n.verdict.includes("Busier")?"#f5a89f":"#f0cd7e";
+  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+' people</span></div>'+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<div class="pctbar"><span style="width:'+Math.min(100,n.pct)+'%;background:'+col+'"></span></div>'+
-    '<div class="when">'+Math.round(n.pct)+'% full &middot; usually ~'+Math.round(n.normal)+'% at this hour &middot; '+DOWFULL[n.now?n.dow:n.dow]+' '+fmtH(n.hour)+'</div>'+
+    '<div class="when">'+Math.round(n.pct)+'% full · usually ~'+Math.round(n.normal)+'% · '+DOWFULL[n.now?n.dow:n.dow]+' '+fmtH(n.hour)+'</div>'+
     '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
 
 function renderForecast(){
   const z=DATA[FACILITY];const el=document.getElementById("forecast");
-  if(!z||z.forecast.length<2){el.innerHTML='<div class="fc-wrap">Not enough data yet — data auto-populates as tracking scales.</div>';return;}
+  if(!z||z.forecast.length<2){el.innerHTML='<div class="fc-wrap">Not enough data yet — fills in as readings accumulate.</div>';return;}
   const fc=z.forecast;const W=680,H=190,padL=36,padR=14,padB=26,padT=10;
   const plotW=W-padL-padR,plotH=H-padT-padB;
   const hmin=fc[0].h,hmax=fc[fc.length-1].h;
@@ -723,21 +228,23 @@ function renderForecast(){
   const y=p=>padT+(1-p/100)*plotH;
   let line="";fc.forEach((f,i)=>{line+=(i===0?"M":"L")+x(f.h)+" "+y(f.pct)+" ";});
   const area=line+"L"+x(fc[fc.length-1].h)+" "+y(0)+" L"+x(fc[0].h)+" "+y(0)+" Z";
-  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#E5E7EB" stroke-width="1"/><text x="'+(padL-8)+'" y="'+(y(g)+3)+'" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#9CA3AF">'+g+'</text>';});
+  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#c9d6e2" stroke-width="0.5"/><text x="'+(padL-6)+'" y="'+(y(g)+3)+'" text-anchor="end" font-family="Space Mono" font-size="9" fill="#5f7488">'+g+'</text>';});
   let dots="",xlab="";
-  fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="5" fill="'+LOADCOLOR(f.pct)+'" stroke="#ffffff" stroke-width="2" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
-    if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-4)+'" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6B7280">'+fmtH(f.h)+'</text>';});
-  const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(29, 78, 216, 0.05)"/><path d="'+line+'" fill="none" stroke="#1D4ED8" stroke-width="3"/>'+dots+xlab+'</svg>';
-  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">Percentages indicate how close the space is to maximum legal capacity</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap points along the projection curve for a specific estimate.</div></div>';
+  fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="4.5" fill="'+LOADCOLOR(f.pct)+'" stroke="#0f2233" stroke-width="1.5" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
+    if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-8)+'" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#5f7488">'+fmtH(f.h)+'</text>';});
+  const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(255,191,63,0.16)"/><path d="'+line+'" fill="none" stroke="#e0a01a" stroke-width="2.5"/>'+dots+xlab+'</svg>';
+  
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">the percentages are the number of people in the arc divided by the total occupancy</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
+  
   el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
     const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.max*p/100);
     const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
-    document.getElementById('fcTip').innerHTML='<span>⚡ Estimated projection at <b>'+fmtH(h)+'</b> is ~<b>'+p+'%</b> full (&nbsp;~'+ppl.toLocaleString()+' people inside&nbsp;) &middot; status is <b>'+lbl+'</b></span>';}));
+    document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% full · ~'+ppl.toLocaleString()+' of '+z.max.toLocaleString()+' · <b>'+lbl+'</b>';}));
 }
 
 function renderBest(){
   const z=DATA[FACILITY];const el=document.getElementById("bestTimes");
-  if(!z||!z.best.length){el.innerHTML='<div class="ev-empty">Awaiting processing parameters...</div>';return;}
+  if(!z||!z.best.length){el.innerHTML='<div class="ev-empty">Not enough data yet — best times fill in as readings accumulate.</div>';return;}
   let h='<div class="bt-grid">';
   for(let d=0;d<7;d++){const b=z.best.find(x=>x.d===d);
     h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
@@ -749,7 +256,7 @@ function renderHeat(){
   const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
   let h='<table class="heat"><tr><th></th>';for(let hr=6;hr<24;hr++)h+='<th>'+fmtH(hr)+'</th>';h+='</tr>';
   for(let d=0;d<7;d++){h+='<tr><th style="text-align:right;padding-right:8px">'+DOW[d]+'</th>';
-    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#F9FAFB":HEATCOLOR(p);const t=p==null?"":(p>=35?"#111827":"#111827");
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f7f9fb":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#fff");
       h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':Math.round(p)+'%')+'">'+(p==null?'':Math.round(p))+'</td>';}h+='</tr>';}
   h+='</table>';document.getElementById("heat").innerHTML=h;
 }
@@ -764,12 +271,12 @@ function renderHours(){
   else{const mins=now.getHours()*60+now.getMinutes();const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
     let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];if(today.close==="24:00")closeM=1440;
     const isOpen=mins>=openM&&mins<closeM;
-    html+='<div class="hours-pill"><span class="st '+(isOpen?'open':'closed')+'">'+(isOpen?'Open Now':'Closed')+'</span><span>&nbsp;&middot;&nbsp;Today from '+fmtClock(today.open)+' to '+fmtClock(today.close)+'</span></div>';
-    if(isOpen&&closeM-mins<=60)html+='<div class="hours-warn closing">Closing soon &mdash; facility locks up at '+fmtClock(today.close)+' today.</div>';}
+    html+='<div class="hours-pill"><span class="st '+(isOpen?'open':'closed')+'">'+(isOpen?'Open':'Closed')+'</span><span>Today '+fmtClock(today.open)+'–'+fmtClock(today.close)+'</span></div>';
+    if(isOpen&&closeM-mins<=60)html+='<div class="hours-warn closing">Closing soon — '+fmtClock(today.close)+' today.</div>';}
   const warns=[];for(let i=1;i<=7;i++){const d=new Date(now);d.setDate(now.getDate()+i);const k=dateKey(d);
     if(HOURS.special&&HOURS.special[k]){const s=HOURS.special[k];const lbl=DOW[(d.getDay()+6)%7]+' '+MONTHABBR[d.getMonth()]+' '+d.getDate();
-      warns.push(s.closed?'<b>'+lbl+':</b> Closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
-  if(warns.length)html+='<div class="hours-warn">Upcoming Adjustments &middot; '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
+      warns.push(s.closed?'<b>'+lbl+':</b> closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
+  if(warns.length)html+='<div class="hours-warn">Upcoming Adjustments · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
   el.innerHTML=html;
 }
 
@@ -800,7 +307,7 @@ function renderCalendar(){
       else hrsTxt='<div class="cal-hrs'+(isSpecial?' special':'')+'">'+fmtClock(hrs.open)+'–'+fmtClock(hrs.close)+'</div>';
     h+='<td class="'+cls.trim()+'"><div class="cal-day">'+day+'</div>'+hrsTxt+'</td>';
     if((startDow+day)%7===0)h+='</tr><tr>';}
-  h+='</tr></table><div class="cal-legend"><span><span class="cal-dot" style="background:rgba(245,158,11,0.25)"></span>Special Hours</span><span><span class="cal-dot" style="background:#E5E7EB"></span>Closed</span><span><span class="cal-dot" style="border:2px solid var(--primary);width:10px;height:10px"></span>Today</span></div>';
+  h+='</tr></table><div class="cal-legend"><span><span class="cal-dot" style="background:rgba(255,191,63,.4)"></span>Special</span><span><span class="cal-dot" style="background:rgba(216,53,42,.3)"></span>Closed</span><span><span class="cal-dot" style="border:2px solid var(--gold);width:10px;height:10px"></span>Today</span></div>';
   el.innerHTML=h;
 }
 function calStep(n){calMonth+=n;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
@@ -816,9 +323,9 @@ fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EV
 fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
   const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
   DATA=analyze(rows);renderAll();
-  const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Connected · synchronized "+rows.length+" items";setTimeout(()=>st.style.display="none",2200);
+  const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
   const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
-  document.getElementById("freshness").textContent="System updated: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
-}).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Sync failure ("+e.message+")";});
+  document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
+}).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
 </script>
 </body></html>
