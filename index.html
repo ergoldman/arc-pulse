@@ -13,87 +13,74 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
   .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
-  header{padding:34px 0 18px;border-bottom:1.5px solid var(--ink)}
+  header{padding:30px 0 0;border-bottom:1.5px solid var(--ink)}
   .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  .brand h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,6vw,58px);letter-spacing:-.02em;line-height:.95}
+  .brand h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(32px,6vw,52px);letter-spacing:-.02em;line-height:.95}
   .brand .sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep)}
-  .tagline{margin-top:8px;font-size:15px;color:var(--moss);max-width:54ch}
-  .toggle{display:inline-flex;margin:22px 0 6px;border:1.5px solid var(--ink);border-radius:2px;overflow:hidden}
-  .toggle button{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:9px 18px;background:transparent;color:var(--ink);border:none;cursor:pointer;transition:.15s}
-  .toggle button.on{background:var(--ink);color:var(--paper)}
-  section{padding:30px 0}
+  /* facility tabs */
+  .tabs{display:flex;gap:0;margin-top:22px}
+  .tabs button{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+    padding:12px 26px;background:transparent;color:var(--moss);border:none;border-bottom:3px solid transparent;cursor:pointer;transition:.15s;margin-bottom:-1.5px}
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--gold)}
+  section{padding:28px 0}
   .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:16px;display:flex;align-items:center;gap:10px}
   .eyebrow::after{content:'';flex:1;height:1px;background:var(--line)}
-  .pulse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-  .pulse{background:var(--paper2);border:1.5px solid var(--ink);border-radius:3px;padding:22px}
-  .pulse h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin-bottom:2px}
-  .pulse .dow{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);letter-spacing:.05em}
-  .ring-row{display:flex;align-items:center;gap:18px;margin-top:14px}
-  .ring{position:relative;width:104px;height:104px;flex-shrink:0}
+  /* hours banner */
+  .hours-card{border:1.5px solid var(--ink);border-radius:3px;padding:16px 18px;background:var(--paper2);display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+  .hours-status{font-family:'Fraunces',serif;font-weight:900;font-size:22px;line-height:1}
+  .hours-status.open{color:#2f5a40}.hours-status.closed{color:var(--hot)}
+  .hours-detail{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--moss)}
+  .hours-warn{border-left:3px solid var(--gold-deep);background:rgba(212,160,42,.12);padding:8px 12px;font-size:13px;color:var(--gold-deep);border-radius:0 3px 3px 0;margin-bottom:6px}
+  .hours-warn.closing{border-left-color:var(--hot);background:rgba(168,52,31,.1);color:var(--hot)}
+  /* now card */
+  .now-card{background:var(--paper2);border:1.5px solid var(--ink);border-radius:3px;padding:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .ring{position:relative;width:120px;height:120px;flex-shrink:0}
   .ring svg{transform:rotate(-90deg)}
   .ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .ring .pct{font-family:'Fraunces',serif;font-weight:900;font-size:26px;line-height:1}
+  .ring .pct{font-family:'Fraunces',serif;font-weight:900;font-size:30px;line-height:1}
   .ring .cap{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--moss);margin-top:2px}
-  .verdict .big{font-family:'Fraunces',serif;font-weight:600;font-size:18px;display:block;margin-bottom:3px}
-  .verdict .cnt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
-  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:2px;margin-top:8px}
-  .tag.calm{background:rgba(91,140,110,.18);color:#2f5a40}
-  .tag.norm{background:rgba(212,160,42,.18);color:var(--gold-deep)}
-  .tag.busy{background:rgba(168,52,31,.15);color:var(--hot)}
-  /* forecast section */
-  .fc-zone{margin-bottom:26px}
-  .fc-zone h3{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin-bottom:4px}
-  .fc-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);margin-bottom:12px}
-  .fc-row{display:flex;gap:4px;align-items:flex-end;overflow-x:auto;padding-bottom:6px}
-  .fc-bar-wrap{display:flex;flex-direction:column;align-items:center;min-width:46px;flex:1}
-  .fc-bar-track{width:100%;height:120px;display:flex;align-items:flex-end;border-bottom:1.5px solid var(--ink)}
-  .fc-bar{width:100%;border-radius:2px 2px 0 0;transition:height .3s}
-  .fc-pct{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;margin-bottom:3px}
-  .fc-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--moss);margin-top:5px}
-  .fc-band{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--line)}
-  .fc-legend{display:flex;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--moss);margin-top:4px}
-  .fc-legend span{display:inline-flex;align-items:center;gap:5px}
-  .fc-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
-  .best{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
-  .chip{background:var(--ink);color:var(--paper);border-radius:2px;padding:8px 12px;min-width:96px}
-  .chip .t{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
-  .chip .p{font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace}
+  .now-info .big{font-family:'Fraunces',serif;font-weight:600;font-size:22px;display:block;margin-bottom:4px}
+  .now-info .cnt{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--moss)}
+  .now-info .when{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);margin-top:6px}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:2px;margin-top:10px}
+  .tag.calm{background:rgba(91,140,110,.18);color:#2f5a40}.tag.norm{background:rgba(212,160,42,.18);color:var(--gold-deep)}.tag.busy{background:rgba(168,52,31,.15);color:var(--hot)}
+  /* forecast area chart */
+  .fc-wrap{background:var(--paper2);border:1.5px solid var(--ink);border-radius:3px;padding:20px}
+  .fc-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+  .fc-head .t{font-family:'Fraunces',serif;font-weight:600;font-size:16px}
+  .fc-head .sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
+  .fc-tip{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink);min-height:18px;margin-top:8px}
+  .fc-tip b{color:var(--gold-deep)}
+  /* heatmap */
   .heatwrap{overflow-x:auto;padding-bottom:6px}
-  /* hours banner */
-  #hoursBanner{margin:24px 0 0}
-  .hours-card{border:1.5px solid var(--ink);border-radius:3px;padding:16px 18px;background:var(--paper2);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  .hours-status{font-family:'Fraunces',serif;font-weight:900;font-size:22px;line-height:1}
-  .hours-status.open{color:#2f5a40}
-  .hours-status.closed{color:var(--hot)}
-  .hours-detail{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--moss);letter-spacing:.03em}
-  .hours-warn{margin-top:10px;border-left:3px solid var(--gold-deep);background:rgba(212,160,42,.12);padding:8px 12px;font-size:13px;color:var(--gold-deep);border-radius:0 3px 3px 0}
-  .hours-warn.closing{border-left-color:var(--hot);background:rgba(168,52,31,.1);color:var(--hot)}
-  .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
-  .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
-  .heat-legend .hl-label{letter-spacing:.05em}
-  .heat-legend .hl-note{color:var(--line);margin-left:4px}
   table.heat{border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:10px}
   table.heat th{font-weight:400;color:var(--moss);padding:3px 4px;text-align:center}
   table.heat td{width:26px;height:22px;text-align:center;border:1px solid var(--paper)}
-  .zsel{display:inline-flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-  .zsel button{font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 12px;background:transparent;border:1.5px solid var(--ink);border-radius:2px;cursor:pointer;color:var(--ink)}
-  .zsel button.on{background:var(--gold);border-color:var(--gold-deep)}
-  .dept-stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
-  .stat{border:1.5px solid var(--ink);border-radius:3px;padding:18px;background:var(--paper2)}
-  .stat .n{font-family:'Fraunces',serif;font-weight:900;font-size:32px;line-height:1}
-  .stat .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);margin-top:6px}
-  .bars{display:flex;align-items:flex-end;gap:3px;height:140px;margin-top:8px}
-  .bars .b{flex:1;background:var(--moss);border-radius:1px 1px 0 0;min-height:2px}
-  .bars .b.peak{background:var(--hot)}
-  .axis{display:flex;gap:3px;margin-top:4px}
-  .axis span{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--moss)}
+  .heat-legend{display:flex;align-items:center;gap:5px;margin-top:12px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss)}
+  .heat-legend .hl-swatch{width:22px;height:14px;border-radius:2px;display:inline-block}
+  .heat-legend .hl-note{color:var(--line);margin-left:4px}
+  /* calendar */
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cal-head button{font-family:'JetBrains Mono',monospace;font-size:16px;background:var(--paper2);border:1.5px solid var(--ink);border-radius:3px;width:34px;height:34px;cursor:pointer;color:var(--ink)}
+  .cal-head .mo{font-family:'Fraunces',serif;font-weight:600;font-size:18px}
+  table.cal{width:100%;border-collapse:collapse;table-layout:fixed}
+  table.cal th{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--moss);padding:6px 2px;text-transform:uppercase;letter-spacing:.05em}
+  table.cal td{border:1px solid var(--line);vertical-align:top;height:64px;padding:5px;background:var(--paper2)}
+  table.cal td.empty{background:transparent;border:none}
+  table.cal td.today{outline:2px solid var(--gold)}
+  table.cal td.closed{background:rgba(168,52,31,.1)}
+  table.cal td.special{background:rgba(212,160,42,.14)}
+  .cal-day{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
+  .cal-hrs{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--moss);margin-top:3px;line-height:1.3}
+  .cal-hrs.closed{color:var(--hot);font-weight:600}
+  .cal-hrs.special{color:var(--gold-deep)}
+  .cal-legend{display:flex;gap:16px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--moss);flex-wrap:wrap}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  .cal-dot{width:12px;height:12px;border-radius:2px;display:inline-block}
   .hidden{display:none}
-  .thin-note{background:var(--paper2);border:1px dashed var(--line);border-radius:3px;padding:14px;font-size:13px;color:var(--moss);margin-top:8px}
-  footer{border-top:1.5px solid var(--ink);padding:22px 0 50px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);line-height:1.7}
   .status{font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 0;text-align:center;letter-spacing:.05em}
-  .status.loading{background:var(--gold);color:var(--ink)}
-  .status.ok{background:var(--calm);color:#fff}
-  .status.err{background:var(--hot);color:#fff}
+  .status.loading{background:var(--gold);color:var(--ink)}.status.ok{background:var(--calm);color:#fff}.status.err{background:var(--hot);color:#fff}
+  footer{border-top:1.5px solid var(--ink);padding:22px 0 50px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--moss);line-height:1.7;margin-top:20px}
   @media (prefers-reduced-motion:no-preference){.blink{animation:bl 2s ease-in-out infinite}@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}}
 </style>
 </head>
@@ -101,91 +88,63 @@
 <div id="status" class="status loading">Loading live ARC data…</div>
 <header><div class="wrap">
   <div class="brand"><h1>ARC Pulse</h1><span class="sub">UC Davis · live</span></div>
+  <div class="tabs">
+    <button id="tab-arc" class="on" onclick="setFacility('ARC Access')">ARC</button>
+    <button id="tab-pool" onclick="setFacility('Recreation Pool')">Pool</button>
+  </div>
 </div></header>
 <main class="wrap">
-  <div id="hoursBanner"></div>
-  <div id="view-student">
-    <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div class="pulse-grid" id="nowGrid"></div></section>
-    <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="zsel" id="heatSel"></div><div class="heatwrap"><div id="heat"></div></div>
-      <div class="heat-legend">
-        <span class="hl-label">Quieter</span>
-        <span class="hl-swatch" style="background:#eae4d3"></span>
-        <span class="hl-swatch" style="background:#e3d39a"></span>
-        <span class="hl-swatch" style="background:#d4a02a"></span>
-        <span class="hl-swatch" style="background:#c8682f"></span>
-        <span class="hl-swatch" style="background:#a8341f"></span>
-        <span class="hl-label">Busier</span>
-        <span class="hl-note">· numbers show % full · blank = no data collected yet</span>
-      </div>
-    </section>
-    <section><div class="eyebrow">Today's forecast — hour by hour</div><div id="forecast"></div>
-      <div class="fc-legend">
-        <span><span class="fc-dot" style="background:var(--calm)"></span>quiet</span>
-        <span><span class="fc-dot" style="background:var(--gold)"></span>moderate</span>
-        <span><span class="fc-dot" style="background:var(--warn)"></span>busy</span>
-        <span><span class="fc-dot" style="background:var(--hot)"></span>packed</span>
-      </div>
-    </section>
-    <section><div class="eyebrow">Best times to go this week</div><div id="bestZones"></div></section>
-  </div>
+  <section><div class="eyebrow">Hours</div><div id="hoursBanner"></div></section>
+  <section><div class="eyebrow">Right now <span class="blink" style="color:var(--hot)">●</span></div><div id="nowCard"></div></section>
+  <section><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
+  <section><div class="eyebrow">Typical week — quiet vs packed</div><div class="heatwrap"><div id="heat"></div></div>
+    <div class="heat-legend"><span>Quieter</span>
+      <span class="hl-swatch" style="background:#eae4d3"></span><span class="hl-swatch" style="background:#e3d39a"></span>
+      <span class="hl-swatch" style="background:#d4a02a"></span><span class="hl-swatch" style="background:#c8682f"></span>
+      <span class="hl-swatch" style="background:#a8341f"></span><span>Busier</span>
+      <span class="hl-note">· % full · blank = no data yet</span></div>
+  </section>
+  <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
 </main>
 <footer><div class="wrap">
   ARC Pulse · live public facility-occupancy data · aggregate counts only, no personal data<br/>
-  <span id="freshness"></span> · Forecast = average for this weekday &amp; hour from collected history.
+  <span id="freshness"></span>
 </div></footer>
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv";
+const CSV_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv";
+const HOURS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json";
 const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTHABBR=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
 const HEATCOLOR=p=>p<8?"#eae4d3":p<20?"#e3d39a":p<35?"#d4a02a":p<55?"#c8682f":"#a8341f";
 const LOADCOLOR=p=>p<25?"#5b8c6e":p<50?"#d4a02a":p<75?"#c8682f":"#a8341f";
-const loadLabel=p=>p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
+let DATA={}, HOURS=null, FACILITY="ARC Access";
 
-// ---- OPEN HOURS FILTER ----------------------------------------------------
-// Readings logged while the ARC is closed are garbage (the feed reports stray
-// counts at 3-4am, etc.). We exclude anything outside open hours from all
-// PATTERN analysis (peak hour, hourly chart, heatmap, forecast, best-times).
-// Window is deliberately wide so it covers BOTH summer and academic-year hours
-// and never breaks when the season changes. dow: 0=Mon ... 6=Sun.
-//   Weekdays open ~5am-midnight (academic) / 6am-10pm (summer) -> use 5..23
-//   Weekends open ~8am-11pm (academic) / 9am-9pm (summer)      -> use 8..23
-// To change hours later, edit these two lines only:
-const OPEN_WEEKDAY = {start: 5, end: 23};   // Mon-Fri inclusive hours
-const OPEN_WEEKEND = {start: 8, end: 23};   // Sat-Sun inclusive hours
-function isOpenHour(dow, hour){
-  const w = (dow >= 5) ? OPEN_WEEKEND : OPEN_WEEKDAY;  // 5=Sat,6=Sun
-  return hour >= w.start && hour <= w.end;
-}
-// ---------------------------------------------------------------------------
+function pacificNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));}
+function dateKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');}
+function isSummer(d){const m=d.getMonth()+1;return (m>6&&m<9)||(m===6&&d.getDate()>=15)||(m===9&&d.getDate()<22);}
+function fmtClock(hhmm){if(!hhmm)return"";let[h,m]=hhmm.split(":").map(Number);const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;return m===0?hr+ap:hr+":"+String(m).padStart(2,'0')+ap;}
 
 function parseCSV(text){
-  const lines=text.trim().split(/\r?\n/);
-  const head=lines[0].split(",");
+  const lines=text.trim().split(/\r?\n/);const head=lines[0].split(",");
   return lines.slice(1).map(l=>{
-    const parts=l.split(",");const o={};head.forEach((h,i)=>o[h]=parts[i]);
-    // The logger runs on GitHub Actions (UTC) and writes a timestamp with no
-    // timezone marker, e.g. "2026-07-02T15:39:38". Left alone, the browser
-    // reads it in the viewer's local zone, which is wrong. We force UTC by
-    // appending "Z", then read the hour/day in Pacific (America/Los_Angeles)
-    // so every reading lands in the correct Davis-time hour bucket.
-    const dtUTC = new Date(o.timestamp + "Z");
-    const pac = new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
-    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,
-            hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC,dtLocal:pac};
+    const p=l.split(",");const o={};head.forEach((h,i)=>o[h]=p[i]);
+    const dtUTC=new Date(o.timestamp+"Z");
+    const pac=new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
+    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC};
   }).filter(r=>r.name&&!isNaN(r.pct)&&r.name!=="Rock Wall");
-  // Rock Wall is excluded: its occupancy feed isn't actively tracked
-  // (reports a constant value), so it isn't meaningful to display.
 }
 
+// open-hours filter for patterns
+function isOpenHour(dow,hour){return dow>=5?(hour>=8&&hour<=23):(hour>=5&&hour<=23);}
+
 function analyze(rows){
-  const zones={};
-  rows.forEach(r=>{(zones[r.name]=zones[r.name]||[]).push(r);});
+  const zones={};rows.forEach(r=>{(zones[r.name]=zones[r.name]||[]).push(r);});
   const out={};
   for(const [name,rs] of Object.entries(zones)){
-    rs.sort((a,b)=>a.dt-b.dt);
-    const max=rs[rs.length-1].max;
-    // Pattern tables use ONLY open-hours readings (closed-hour data is garbage).
+    rs.sort((a,b)=>a.dt-b.dt);const max=rs[rs.length-1].max;
     const cell={},hourly={};
     rs.filter(r=>isOpenHour(r.dow,r.hour)).forEach(r=>{
       (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
@@ -195,181 +154,151 @@ function analyze(rows){
     const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
     const latest=rs[rs.length-1];
     const slot=cell[latest.dow+"-"+latest.hour]||[latest.pct];
-    const normal=avg(slot);
-    const sd=slot.length>1?std(slot):1;
-    const z=sd?(latest.pct-normal)/sd:0;
+    const normal=avg(slot);const sd=slot.length>1?std(slot):1;const z=sd?(latest.pct-normal)/sd:0;
     const verdict=z<-0.6?"quieter than usual":z>0.6?"busier than usual":"about normal";
-    const typical=Object.keys(hourly).map(h=>({h:+h,pct:avg(hourly[h])})).sort((a,b)=>a.h-b.h);
-    const best=[];
-    for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
-    const heat=[];
-    for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
-    // FORECAST: for today's dow, predicted pct per hour from now on, with band
-    const fc=[];
-    for(let h=latest.hour;h<24;h++){
-      const c=cell[latest.dow+"-"+h];
-      if(c){const m=avg(c),s=std(c);fc.push({h,pct:m,lo:Math.max(0,m-s),hi:Math.min(100,m+s)});}
-    }
-    out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},
-               typical,best,heat,forecast:fc,nReadings:rs.length,lastDT:latest.dt};
+    const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
+    const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){const m=avg(c);fc.push({h,pct:m});}}
+    out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,lastDT:latest.dt};
   }
   return out;
 }
 
 function ring(pct){
-  const r=44,c=2*Math.PI*r,off=c*(1-pct/100);
+  const r=52,c=2*Math.PI*r,off=c*(1-pct/100);
   const col=pct<25?"var(--calm)":pct<55?"var(--gold)":"var(--hot)";
-  return `<div class="ring"><svg width="104" height="104">
-    <circle cx="52" cy="52" r="${r}" fill="none" stroke="#d8cdb2" stroke-width="9"/>
-    <circle cx="52" cy="52" r="${r}" fill="none" stroke="${col}" stroke-width="9"
-      stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round"/>
-  </svg><div class="mid"><span class="pct">${Math.round(pct)}%</span><span class="cap">full</span></div></div>`;
+  return '<div class="ring"><svg width="120" height="120"><circle cx="60" cy="60" r="'+r+'" fill="none" stroke="#d8cdb2" stroke-width="10"/><circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="10" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" stroke-linecap="round"/></svg><div class="mid"><span class="pct">'+Math.round(pct)+'%</span><span class="cap">full</span></div></div>';
 }
 
-let DATA={};
 function renderNow(){
-  const g=document.getElementById("nowGrid");g.innerHTML="";
-  for(const [name,z] of Object.entries(DATA)){
-    const n=z.now;
-    const tc=n.verdict.includes("quiet")?"calm":n.verdict.includes("busy")?"busy":"norm";
-    g.innerHTML+=`<div class="pulse"><h3>${name}</h3>
-      <div class="dow">${DOWFULL[n.dow]} · ${fmtH(n.hour)} now</div>
-      <div class="ring-row">${ring(n.pct)}
-        <div class="verdict"><span class="big">${n.verdict}</span>
-        <span class="cnt">${n.cur} of ${z.max} · usually ~${Math.round(n.normal)}%</span><br>
-        <span class="tag ${tc}">${n.verdict}</span></div></div></div>`;
-  }
+  const z=DATA[FACILITY];const el=document.getElementById("nowCard");
+  if(!z){el.innerHTML='<div class="now-card">No data yet for this facility.</div>';return;}
+  const n=z.now;const tc=n.verdict.includes("quiet")?"calm":n.verdict.includes("busy")?"busy":"norm";
+  el.innerHTML='<div class="now-card">'+ring(n.pct)+
+    '<div class="now-info"><span class="big">'+n.verdict+'</span>'+
+    '<span class="cnt">'+n.cur.toLocaleString()+' of '+z.max.toLocaleString()+' people · usually ~'+Math.round(n.normal)+'%</span>'+
+    '<div class="when">'+DOWFULL[n.dow]+' · '+fmtH(n.hour)+' now</div>'+
+    '<span class="tag '+tc+'">'+n.verdict+'</span></div></div>';
 }
-function renderForecast(){
-  const wrap=document.getElementById("forecast");wrap.innerHTML="";
-  for(const [name,z] of Object.entries(DATA)){
-    if(!z.forecast||z.forecast.length<2){wrap.innerHTML+=`<div class="thin-note">Not enough data yet to forecast ${name} — fills in as readings accumulate.</div>`;continue;}
-    let bars="";
-    z.forecast.forEach(f=>{
-      bars+=`<div class="fc-bar-wrap" title="${fmtH(f.h)}: ${Math.round(f.pct)}% (range ${Math.round(f.lo)}-${Math.round(f.hi)}%)">
-        <div class="fc-pct">${Math.round(f.pct)}%</div>
-        <div class="fc-bar-track"><div class="fc-bar" style="height:${Math.max(2,f.pct)}%;background:${LOADCOLOR(f.pct)}"></div></div>
-        <div class="fc-time">${fmtH(f.h)}</div></div>`;
-    });
-    wrap.innerHTML+=`<div class="fc-zone"><h3>${name}</h3>
-      <div class="fc-sub">predicted for the rest of ${DOWFULL[z.now.dow]}</div>
-      <div class="fc-row">${bars}</div></div>`;
-  }
-}
-function renderBest(){
-  const w=document.getElementById("bestZones");w.innerHTML="";
-  for(const [name,z] of Object.entries(DATA)){
-    if(!z.best.length){w.innerHTML+=`<div class="thin-note">Not enough data yet for ${name}.</div>`;continue;}
-    const chips=z.best.map(b=>`<div class="chip"><div class="t">${DOW[b.d]} ${fmtH(b.h)}</div><div class="p">~${Math.round(b.pct)}% full</div></div>`).join("");
-    w.innerHTML+=`<div style="margin-bottom:16px"><div style="font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin-bottom:8px">${name}</div><div class="best">${chips}</div></div>`;
-  }
-}
-let heatZone=null;
-function renderHeatSel(){
-  const s=document.getElementById("heatSel");s.innerHTML="";
-  if(!heatZone)heatZone=Object.keys(DATA)[0];
-  Object.keys(DATA).forEach(n=>{s.innerHTML+=`<button class="${n===heatZone?'on':''}" onclick="heatZone='${n}';renderHeatSel();renderHeat()">${n}</button>`;});
-}
-function renderHeat(){
-  const z=DATA[heatZone];if(!z)return;
-  const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
-  let h='<table class="heat"><tr><th></th>';
-  for(let hr=6;hr<24;hr++)h+=`<th>${fmtH(hr)}</th>`;h+="</tr>";
-  for(let d=0;d<7;d++){h+=`<tr><th style="text-align:right;padding-right:8px">${DOW[d]}</th>`;
-    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f3efe4":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#10241b");
-      h+=`<td style="background:${c};color:${t}" title="${DOW[d]} ${fmtH(hr)}: ${p==null?'—':Math.round(p)+'%'}">${p==null?'':Math.round(p)}</td>`;}
-    h+="</tr>";}
-  h+="</table>";document.getElementById("heat").innerHTML=h;
-}
-function renderAll(){renderNow();renderForecast();renderBest();renderHeatSel();renderHeat();}
 
-// ---- HOURS FEATURE --------------------------------------------------------
-const HOURS_URL = "https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json";
-const MONTHNAMES=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-function pacificNow(){
-  // current date/time in Pacific
-  return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
+// FORECAST as smooth area curve with SVG
+function renderForecast(){
+  const z=DATA[FACILITY];const el=document.getElementById("forecast");
+  if(!z||z.forecast.length<2){el.innerHTML='<div class="fc-wrap">Not enough data yet to forecast — fills in as readings accumulate.</div>';return;}
+  const fc=z.forecast;const W=680,H=200,padL=38,padR=16,padB=28,padT=12;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const hours=fc.map(f=>f.h);const hmin=hours[0],hmax=hours[hours.length-1];
+  const x=h=>padL+(hmax===hmin?0:(h-hmin)/(hmax-hmin))*plotW;
+  const y=p=>padT+(1-p/100)*plotH;   // 0-100% scale, ALWAYS full scale for clarity
+  // build path
+  let line="",area="";
+  fc.forEach((f,i)=>{const px=x(f.h),py=y(f.pct);line+=(i===0?"M":"L")+px+" "+py+" ";});
+  area=line+"L"+x(fc[fc.length-1].h)+" "+y(0)+" L"+x(fc[0].h)+" "+y(0)+" Z";
+  // gridlines at 25/50/75/100
+  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#cabfa3" stroke-width="0.5"/><text x="'+(padL-6)+'" y="'+(y(g)+3)+'" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#3f6b4f">'+g+'%</text>';});
+  // x labels + dots
+  let dots="",xlab="";
+  fc.forEach((f,i)=>{const px=x(f.h),py=y(f.pct);
+    dots+='<circle cx="'+px+'" cy="'+py+'" r="4" fill="'+LOADCOLOR(f.pct)+'" stroke="#10241b" stroke-width="1" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
+    if(i%2===0||i===fc.length-1)xlab+='<text x="'+px+'" y="'+(H-8)+'" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#3f6b4f">'+fmtH(f.h)+'</text>';
+  });
+  const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+
+    '<path d="'+area+'" fill="rgba(212,160,42,0.18)"/>'+
+    '<path d="'+line+'" fill="none" stroke="#b07d12" stroke-width="2.5"/>'+dots+xlab+'</svg>';
+  const max=z.max;
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted % full by hour</span></div>'+svg+
+    '<div class="fc-tip" id="fcTip">Tap a point to see the estimate.</div></div>';
+  // interactivity
+  el.querySelectorAll('.fcdot').forEach(d=>{
+    d.addEventListener('click',()=>{
+      const h=+d.dataset.h,p=+d.dataset.p;const ppl=Math.round(max*p/100);
+      const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
+      document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% full · ~'+ppl.toLocaleString()+' of '+max.toLocaleString()+' people · <b>'+lbl+'</b>';
+    });
+  });
 }
-function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function isSummer(d){
-  // Summer hours mid-June to ~late Sept (approx; special dates override anyway)
-  const m=d.getMonth()+1; return (m>6&&m<9)||(m===6&&d.getDate()>=15)||(m===9&&d.getDate()<22);
+
+function renderHeat(){
+  const z=DATA[FACILITY];if(!z){document.getElementById("heat").innerHTML="";return;}
+  const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
+  let h='<table class="heat"><tr><th></th>';for(let hr=6;hr<24;hr++)h+='<th>'+fmtH(hr)+'</th>';h+='</tr>';
+  for(let d=0;d<7;d++){h+='<tr><th style="text-align:right;padding-right:8px">'+DOW[d]+'</th>';
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#f3efe4":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#10241b");
+      h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':Math.round(p)+'%')+'">'+(p==null?'':Math.round(p))+'</td>';}
+    h+='</tr>';}
+  h+='</table>';document.getElementById("heat").innerHTML=h;
 }
-function hoursForDay(H,d){
+
+/* ===== HOURS ===== */
+function hoursForDay(d){
+  if(!HOURS)return null;
   const key=dateKey(d);
-  if(H.special&&H.special[key])return H.special[key];              // special day wins
+  if(HOURS.special&&HOURS.special[key])return HOURS.special[key];
   const weekend=(d.getDay()===0||d.getDay()===6);
-  const set=isSummer(d)?H.summer:H.regular;
+  const set=isSummer(d)?HOURS.summer:HOURS.regular;
   return weekend?set.weekend:set.weekday;
 }
-function fmtClock(hhmm){
-  if(!hhmm)return"";let[h,m]=hhmm.split(":").map(Number);
-  const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;
-  return m===0?`${hr}${ap}`:`${hr}:${String(m).padStart(2,'0')}${ap}`;
-}
-function renderHours(H){
-  const el=document.getElementById("hoursBanner");
-  const now=pacificNow();
-  const today=hoursForDay(H,now);
-  let html='<div class="hours-card">';
-  if(today.closed){
-    html+=`<span class="hours-status closed">Closed today</span>
-           <span class="hours-detail">The ARC is closed today.</span>`;
-  }else{
-    // open/closed right now
+function renderHours(){
+  const el=document.getElementById("hoursBanner");if(!HOURS){el.innerHTML='<div class="hours-card"><span class="hours-detail">Hours unavailable right now.</span></div>';return;}
+  const now=pacificNow();const today=hoursForDay(now);let html="";
+  if(today.closed){html+='<div class="hours-card"><span class="hours-status closed">Closed today</span></div>';}
+  else{
     const mins=now.getHours()*60+now.getMinutes();
     const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
-    let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];
-    if(today.close==="24:00")closeM=24*60;
+    let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];if(today.close==="24:00")closeM=1440;
     const isOpen=mins>=openM&&mins<closeM;
-    html+=`<span class="hours-status ${isOpen?'open':'closed'}">${isOpen?'Open now':'Closed now'}</span>
-           <span class="hours-detail">Today: ${fmtClock(today.open)} – ${fmtClock(today.close)}</span>`;
-    // closing-soon warning (within 60 min)
-    if(isOpen && closeM-mins<=60){
-      html+=`</div><div class="hours-warn closing">Closing soon — ${fmtClock(today.close)} today.</div>`;
-      document.getElementById("hoursBanner").innerHTML=html;return;
-    }
+    html+='<div class="hours-card"><span class="hours-status '+(isOpen?'open':'closed')+'">'+(isOpen?'Open now':'Closed now')+'</span><span class="hours-detail">Today: '+fmtClock(today.open)+' – '+fmtClock(today.close)+'</span></div>';
+    if(isOpen&&closeM-mins<=60)html+='<div class="hours-warn closing">Closing soon — '+fmtClock(today.close)+' today.</div>';
   }
-  html+='</div>';
-  // Advance warning: scan next 7 days for special/closed days
-  const warns=[];
-  for(let i=1;i<=7;i++){
-    const d=new Date(now);d.setDate(now.getDate()+i);
-    const key=dateKey(d);
-    if(H.special&&H.special[key]){
-      const s=H.special[key];
-      const label=`${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]} ${MONTHNAMES[d.getMonth()]} ${d.getDate()}`;
-      if(s.closed)warns.push(`<b>${label}:</b> ARC closed`);
-      else warns.push(`<b>${label}:</b> special hours ${fmtClock(s.open)}–${fmtClock(s.close)}`);
-    }
-  }
-  if(warns.length){
-    html+=`<div class="hours-warn">Heads up · ${warns.slice(0,3).join(" &nbsp;·&nbsp; ")}</div>`;
-  }
+  // advance warnings next 7 days
+  const warns=[];for(let i=1;i<=7;i++){const d=new Date(now);d.setDate(now.getDate()+i);const k=dateKey(d);
+    if(HOURS.special&&HOURS.special[k]){const s=HOURS.special[k];const lbl=DOW[(d.getDay()+6)%7]+' '+MONTHABBR[d.getMonth()]+' '+d.getDate();
+      warns.push(s.closed?'<b>'+lbl+':</b> closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
+  if(warns.length)html+='<div class="hours-warn">Heads up · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
   el.innerHTML=html;
 }
-fetch(HOURS_URL+"?t="+Date.now())
-  .then(r=>r.ok?r.json():null)
-  .then(H=>{ if(H&&(H.status==="ok"||H.status==="partial")) renderHours(H); })
-  .catch(()=>{ /* hours unavailable — silently skip, site still works */ });
-// ---------------------------------------------------------------------------
+/* ===== CALENDAR ===== */
+let calMonth=null,calYear=null;
+function renderCalendar(){
+  const el=document.getElementById("calendar");
+  const now=pacificNow();
+  if(calMonth===null){calMonth=now.getMonth();calYear=now.getFullYear();}
+  const first=new Date(calYear,calMonth,1);const startDow=(first.getDay());
+  const days=new Date(calYear,calMonth+1,0).getDate();
+  let h='<div class="cal-head"><button onclick="calStep(-1)">‹</button><span class="mo">'+MONTHNAMES[calMonth]+' '+calYear+'</span><button onclick="calStep(1)">›</button></div>';
+  h+='<table class="cal"><tr>';["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>h+='<th>'+d+'</th>');h+='</tr><tr>';
+  for(let i=0;i<startDow;i++)h+='<td class="empty"></td>';
+  for(let day=1;day<=days;day++){
+    const d=new Date(calYear,calMonth,day);const hrs=hoursForDay(d);
+    const isToday=dateKey(d)===dateKey(now);
+    const key=dateKey(d);const isSpecial=HOURS&&HOURS.special&&HOURS.special[key];
+    let cls="";if(hrs&&hrs.closed)cls="closed";else if(isSpecial)cls="special";if(isToday)cls+=" today";
+    let hrsTxt="";if(!hrs)hrsTxt="";else if(hrs.closed)hrsTxt='<div class="cal-hrs closed">Closed</div>';
+      else hrsTxt='<div class="cal-hrs'+(isSpecial?' special':'')+'">'+fmtClock(hrs.open)+'–'+fmtClock(hrs.close)+'</div>';
+    h+='<td class="'+cls.trim()+'"><div class="cal-day">'+day+'</div>'+hrsTxt+'</td>';
+    if((startDow+day)%7===0)h+='</tr><tr>';
+  }
+  h+='</tr></table><div class="cal-legend"><span><span class="cal-dot" style="background:rgba(212,160,42,.4)"></span>Special hours</span><span><span class="cal-dot" style="background:rgba(168,52,31,.3)"></span>Closed</span><span><span class="cal-dot" style="outline:2px solid var(--gold);width:10px;height:10px"></span>Today</span></div>';
+  el.innerHTML=h;
+}
+function calStep(n){calMonth+=n;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 
+function setFacility(f){
+  FACILITY=f;
+  document.getElementById("tab-arc").classList.toggle("on",f==="ARC Access");
+  document.getElementById("tab-pool").classList.toggle("on",f==="Recreation Pool");
+  renderNow();renderForecast();renderHeat();
+}
+function renderAll(){renderHours();renderNow();renderForecast();renderHeat();renderCalendar();}
 
-fetch(CSV_URL+"?t="+Date.now())
-  .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
-  .then(text=>{
-    const rows=parseCSV(text);
-    if(!rows.length)throw new Error("No data rows yet");
-    DATA=analyze(rows);renderAll();
-    const st=document.getElementById("status");st.className="status ok";st.textContent="Live · "+rows.length+" readings";
-    setTimeout(()=>st.style.display="none",2500);
-    const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
-    document.getElementById("freshness").textContent="Latest reading: "+
-      new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
-  })
-  .catch(e=>{
-    const st=document.getElementById("status");st.className="status err";
-    st.textContent="Couldn't load data ("+e.message+"). If the logger just started, check back soon.";
-  });
+// fetch hours
+fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+// fetch occupancy
+fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
+  const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
+  DATA=analyze(rows);renderAll();
+  const st=document.getElementById("status");st.className="status ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2500);
+  const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
+  document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
+}).catch(e=>{const st=document.getElementById("status");st.className="status err";st.textContent="Couldn't load data ("+e.message+")";});
 </script>
 </body></html>
