@@ -19,7 +19,6 @@ Env vars required (GitHub Actions secrets):
 import json, os, sys
 from datetime import datetime, timedelta
 
-QUIET_THRESHOLD = 30     # % full below which we consider it "a good time to go"
 CLOSING_WINDOW_MIN = 30
 OPENING_WINDOW_MIN = 30
 
@@ -82,15 +81,45 @@ def hm_to_minutes(hm):
     h, m = hm.split(":")
     return int(h) * 60 + int(m)
 
-def latest_pct(csv_lines, facility_name):
-    for line in reversed(csv_lines[1:]):
+def to_pacific(ts_str):
+    import zoneinfo
+    dt_utc = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+    return dt_utc.astimezone(zoneinfo.ZoneInfo("America/Los_Angeles"))
+
+def quiet_busy_hours_today(csv_lines, facility_name, target_dow):
+    """Quietest AND busiest hour (7am-8pm) historically for this weekday,
+    from real non-zero readings only. Mirrors the site's 'best time' logic."""
+    hourly = {}
+    for line in csv_lines[1:]:
         parts = line.split(",")
-        if len(parts) >= 7 and parts[2] == facility_name:
-            try:
-                return float(parts[6])
-            except ValueError:
-                return None
-    return None
+        if len(parts) < 7 or parts[2] != facility_name:
+            continue
+        try:
+            pct = float(parts[6])
+            if pct <= 0:
+                continue
+            pac = to_pacific(parts[0])
+        except Exception:
+            continue
+        if pac.weekday() != target_dow:
+            continue
+        if not (7 <= pac.hour <= 20):
+            continue
+        hourly.setdefault(pac.hour, []).append(pct)
+    if not hourly:
+        return None
+    avgs = {h: sum(v) / len(v) for h, v in hourly.items()}
+    quiet_h = min(avgs, key=avgs.get)
+    busy_h = max(avgs, key=avgs.get)
+    return {
+        "quiet_hour": quiet_h, "quiet_pct": avgs[quiet_h],
+        "busy_hour": busy_h, "busy_pct": avgs[busy_h],
+    }
+
+def fmt_hour(h):
+    ap = "am" if h < 12 else "pm"
+    hr = h % 12 or 12
+    return f"{hr}{ap}"
 
 def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
     """Returns list of (title, body, tag) to send for this facility, and
@@ -102,7 +131,6 @@ def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
     if not hset:
         return to_send  # no hours data for this facility yet
 
-    pct_now = latest_pct(csv_lines, facility_name)
     today_hours = hours_for_day(hset, now)
     cur_min = now.hour * 60 + now.minute
 
@@ -111,16 +139,19 @@ def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
         close_m = hm_to_minutes(today_hours["close"]) if today_hours["close"] != "24:00" else 1440
 
         if 0 <= close_m - cur_min <= CLOSING_WINDOW_MIN and not fstate.get("closing_sent"):
-            to_send.append((f"{label} closing soon", f"Closes in {close_m-cur_min} min today.", f"{facility_name}-closing"))
+            to_send.append(("closing", f"{label} closing soon", f"Closes in {close_m-cur_min} min today.", f"{facility_name}-closing"))
             fstate["closing_sent"] = True
 
+        # Combined: opening soon + today's forecast (quietest & busiest hour),
+        # sent once as a single notification within the pre-open window.
         if 0 <= open_m - cur_min <= OPENING_WINDOW_MIN and not fstate.get("opening_sent"):
-            to_send.append((f"{label} opening soon", f"Opens in {open_m-cur_min} min today.", f"{facility_name}-opening"))
+            qb = quiet_busy_hours_today(csv_lines, facility_name, now.weekday())
+            body = f"Opens in {open_m-cur_min} min today."
+            if qb:
+                body += (f" Quietest ~{fmt_hour(qb['quiet_hour'])} (~{qb['quiet_pct']:.0f}%), "
+                         f"busiest ~{fmt_hour(qb['busy_hour'])} (~{qb['busy_pct']:.0f}%).")
+            to_send.append(("opening", f"{label} opening soon", body, f"{facility_name}-opening"))
             fstate["opening_sent"] = True
-
-        if pct_now is not None and open_m <= cur_min < close_m and pct_now < QUIET_THRESHOLD and not fstate.get("quiet_sent"):
-            to_send.append((f"Good time to go — {label}", f"{label} is at {pct_now:.0f}% right now — quiet.", f"{facility_name}-quiet"))
-            fstate["quiet_sent"] = True
 
     tomorrow = now + timedelta(days=1)
     tmr_hours = hours_for_day(hset, tomorrow)
@@ -128,9 +159,9 @@ def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
     is_special = tmr_key in hset.get("special", {})
     if is_special and not fstate.get("tomorrow_sent"):
         if tmr_hours.get("closed"):
-            to_send.append((f"{label} heads up", f"{label} is closed tomorrow.", f"{facility_name}-tomorrow"))
+            to_send.append(("tomorrow", f"{label} heads up", f"{label} is closed tomorrow.", f"{facility_name}-tomorrow"))
         else:
-            to_send.append((f"{label} heads up", f"{label} has special hours tomorrow: {tmr_hours['open']}–{tmr_hours['close']}.", f"{facility_name}-tomorrow"))
+            to_send.append(("tomorrow", f"{label} heads up", f"{label} has special hours tomorrow: {tmr_hours['open']}–{tmr_hours['close']}.", f"{facility_name}-tomorrow"))
         fstate["tomorrow_sent"] = True
 
     return to_send
@@ -148,8 +179,8 @@ def main():
         print(f"Couldn't read occupancy CSV: {e}", file=sys.stderr)
         csv_lines = []
 
-    subs = get_subscriptions()
-    print(f"{len(subs)} subscribers")
+    subs_raw = get_subscriptions()
+    print(f"{len(subs_raw)} subscribers")
 
     all_to_send = []
     for facility_name, cfg in FACILITIES.items():
@@ -158,13 +189,18 @@ def main():
 
     if not all_to_send:
         print("No notifications to send this cycle.")
-    for title, body, tag in all_to_send:
-        print(f"Sending: {title} — {body}")
+    for kind, title, body, tag in all_to_send:
+        print(f"Sending [{kind}]: {title} — {body}")
         sent = 0
-        for sub in subs:
+        for entry in subs_raw:
+            # Support both old (raw subscription) and new ({sub, prefs}) shapes.
+            sub = entry.get("sub", entry)
+            prefs = entry.get("prefs", {"closing": True, "opening": True, "tomorrow": True, "forecast": True})
+            if not prefs.get(kind, True):
+                continue  # this subscriber opted out of this notification type
             if send_push(sub, title, body, tag):
                 sent += 1
-        print(f"  sent to {sent}/{len(subs)} subscribers")
+        print(f"  sent to {sent}/{len(subs_raw)} subscribers (after preference filter)")
 
     state = {k: v for k, v in state.items() if k >= (now - timedelta(days=2)).strftime("%Y-%m-%d")}
     state[today_key] = today_state
