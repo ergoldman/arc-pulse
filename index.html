@@ -181,7 +181,7 @@ function analyze(rows){
   for(const [name,rs] of Object.entries(zones)){
     rs.sort((a,b)=>a.dt-b.dt);const max=rs[rs.length-1].max;
     const cell={},hourly={};
-    rs.filter(r=>isOpenHour(r.dow,r.hour)).forEach(r=>{
+    rs.filter(r=>isOpenHour(r.dow,r.hour)&&r.pct>0).forEach(r=>{
       (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
       (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);});
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
