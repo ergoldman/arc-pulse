@@ -40,7 +40,7 @@
     padding: 0 24px;
   }
 
-  /* Header Structure */
+  /* Premium Apple/Spotify Style Header */
   header {
     padding: 40px 0 20px;
     background: transparent;
@@ -87,8 +87,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    text-transform: none;
-    letter-spacing: normal;
   }
 
   .brand .live .dot {
@@ -98,7 +96,7 @@
     background: var(--success);
   }
 
-  /* Segmented Control / Tabs */
+  /* iOS style Segmented Controls */
   .tabs {
     background: #E5E7EB;
     border-radius: 30px;
@@ -127,9 +125,13 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
-  /* App Dashboard Containers */
+  /* Layout Structure */
   main {
     padding-top: 12px;
+  }
+
+  .hours-top-container {
+    margin-bottom: 24px;
   }
 
   section {
@@ -138,12 +140,13 @@
     padding: 24px;
     margin-bottom: 24px;
     border: 1px solid var(--border);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.03);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   section:hover {
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.05);
   }
 
   .eyebrow {
@@ -155,12 +158,8 @@
     display: flex;
     align-items: center;
   }
-  
-  .eyebrow::after {
-    display: none;
-  }
 
-  /* Redesigned Board (Occupancy Card) */
+  /* Premium Occupancy Board */
   .board {
     background: transparent;
     padding: 0;
@@ -189,7 +188,6 @@
     font-weight: 500;
     color: var(--secondary);
     letter-spacing: normal;
-    margin-top: 0;
   }
 
   .board .meta {
@@ -224,7 +222,6 @@
     font-size: 13px;
     color: var(--secondary);
     margin-top: 8px;
-    letter-spacing: normal;
   }
 
   .board .tag {
@@ -232,57 +229,55 @@
     font-family: 'Manrope', sans-serif;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: normal;
-    text-transform: none;
     padding: 4px 12px;
     border-radius: 20px;
     margin-top: 8px;
   }
 
-  /* Status and Warnings Banners */
+  /* Status Pill & Top-level Warnings */
   .hours-pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #F3F4F6;
-    border: none;
-    border-radius: 12px;
-    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 20px;
     font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
-    box-shadow: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    width: 100%;
   }
 
   .hours-pill .st {
     font-family: 'Manrope', sans-serif;
     font-weight: 700;
-    text-transform: none;
-    font-size: 13px;
-    letter-spacing: normal;
+    font-size: 14px;
   }
   
   .hours-pill .st.open { color: var(--success); }
   .hours-pill .st.closed { color: var(--danger); }
   
   .hours-warn {
-    margin-top: 12px;
-    border-left: none;
+    margin-top: 10px;
     background: rgba(245, 158, 11, 0.08);
-    padding: 12px 16px;
+    padding: 14px 18px;
     font-size: 13px;
     color: #B45309;
-    border-radius: 12px;
+    border-radius: 14px;
     font-family: 'Inter', sans-serif;
     font-weight: 500;
+    border: 1px solid rgba(245, 158, 11, 0.15);
   }
 
   .hours-warn.closing {
     background: rgba(239, 68, 68, 0.08);
     color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.15);
   }
 
-  /* Forecast Visualization Area */
+  /* Forecast Visualization */
   .fc-wrap {
     background: transparent;
     border: none;
@@ -302,13 +297,11 @@
     font-family: 'Manrope', sans-serif;
     font-weight: 700;
     font-size: 16px;
-    text-transform: none;
-    letter-spacing: -0.01em;
   }
 
   .fc-head .sub {
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--secondary);
   }
 
@@ -329,7 +322,7 @@
     color: var(--primary);
   }
 
-  /* Heatmap Layout */
+  /* Distinct Color-Differentiable Heatmap */
   .heatwrap {
     overflow-x: auto;
     padding-bottom: 6px;
@@ -339,30 +332,31 @@
     border-collapse: collapse;
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
+    width: 100%;
   }
 
   table.heat th {
     font-family: 'Manrope', sans-serif;
     font-weight: 600;
     color: var(--secondary);
-    padding: 6px;
+    padding: 8px 4px;
     text-align: center;
   }
 
   table.heat td {
     width: 28px;
-    height: 24px;
+    height: 26px;
     text-align: center;
-    border: 2px solid var(--card);
-    border-radius: 6px;
-    font-weight: 600;
+    border: 3px solid var(--card);
+    border-radius: 8px;
+    font-weight: 700;
   }
 
   .heat-legend {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 16px;
+    margin-top: 18px;
     flex-wrap: wrap;
     font-family: 'Inter', sans-serif;
     font-size: 12px;
@@ -370,9 +364,9 @@
   }
 
   .heat-legend .hl-swatch {
-    width: 20px;
-    height: 14px;
-    border-radius: 3px;
+    width: 24px;
+    height: 16px;
+    border-radius: 4px;
     display: inline-block;
   }
 
@@ -382,7 +376,7 @@
     font-size: 11px;
   }
 
-  /* Grid Architecture - Best Times */
+  /* Best Times Grid Matrix */
   .bt-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
@@ -395,7 +389,6 @@
     border-radius: 14px;
     padding: 14px 10px;
     text-align: center;
-    box-shadow: none;
   }
 
   .bt-day .d {
@@ -422,7 +415,7 @@
     color: var(--success);
   }
 
-  /* Classes & Events list structure */
+  /* Schedule Cards */
   .ev-list {
     display: flex;
     flex-direction: column;
@@ -437,7 +430,6 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px 16px;
-    box-shadow: none;
   }
 
   .ev-time {
@@ -462,7 +454,7 @@
     margin-top: 1px;
   }
 
-  /* Notion-style Calendar UI */
+  /* Notion Style Calendar Interface */
   .cal-head {
     display: flex;
     justify-content: space-between;
@@ -494,7 +486,6 @@
     font-family: 'Manrope', sans-serif;
     font-weight: 700;
     font-size: 16px;
-    letter-spacing: -0.01em;
   }
 
   table.cal {
@@ -510,13 +501,12 @@
     font-weight: 600;
     color: var(--secondary);
     padding-bottom: 6px;
-    text-transform: none;
   }
 
   table.cal td {
     border: 1px solid var(--border);
     vertical-align: top;
-    height: 52px;
+    height: 54px;
     padding: 6px;
     background: var(--card);
     border-radius: 10px;
@@ -541,7 +531,7 @@
   }
 
   table.cal td.closed { background: #F3F4F6; }
-  table.cal td.special { background: rgba(245, 158, 11, 0.05); }
+  table.cal td.special { background: rgba(245, 158, 11, 0.06); }
 
   .cal-day {
     font-family: 'JetBrains Mono', monospace;
@@ -573,7 +563,7 @@
   .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .cal-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
-  /* Notification Toast Bar */
+  /* Notification Alerts */
   .hidden { display: none !important; }
   
   .statusbar {
@@ -628,17 +618,30 @@
 </div></header>
 
 <main class="wrap">
-  <section><div class="eyebrow">Right now</div><div id="board"></div><div id="hoursBanner" style="margin-top:14px"></div></section>
+  <div class="hours-top-container">
+    <div id="hoursBanner"></div>
+  </div>
+
+  <section><div class="eyebrow">Right now</div><div id="board"></div></section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
   <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
   <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
-  <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
-    <div class="heat-legend"><span>Quieter</span>
-      <span class="hl-swatch" style="background:#F5F7FA"></span><span class="hl-swatch" style="background:#DBEAFE"></span>
-      <span class="hl-swatch" style="background:#93C5FD"></span><span class="hl-swatch" style="background:#3B82F6"></span>
-      <span class="hl-swatch" style="background:#1D4ED8"></span><span>Busier</span>
-      <span class="hl-note">· % full · blank = no data yet</span></div>
+  
+  <section>
+    <div class="eyebrow">Typical week</div>
+    <div class="heatwrap"><div id="heat"></div></div>
+    <div class="heat-legend">
+      <span>Quieter (0-10%)</span>
+      <span class="hl-swatch" style="background:#E5E7EB"></span>
+      <span class="hl-swatch" style="background:#86EFAC"></span>
+      <span class="hl-swatch" style="background:#FDE047"></span>
+      <span class="hl-swatch" style="background:#F97316"></span>
+      <span class="hl-swatch" style="background:#EF4444"></span>
+      <span>Busier (75%+)</span>
+      <span class="hl-note">· % full · blank = no data yet</span>
+    </div>
   </section>
+  
   <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
 </main>
 
@@ -655,8 +658,8 @@ const MONTHNAMES=["January","February","March","April","May","June","July","Augu
 const MONTHABBR=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtH=h=>{const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
 
-// Clean architectural palette upgrades for graph render computations
-const HEATCOLOR=p=>p<8?"#F5F7FA":p<20?"#DBEAFE":p<35?"#93C5FD":p<55?"#3B82F6":"#1D4ED8";
+// Clear, highly differentiable heatmap color mapping
+const HEATCOLOR=p=>p<8?"#E5E7EB":p<20?"#86EFAC":p<35?"#FDE047":p<55?"#F97316":"#EF4444";
 const LOADCOLOR=p=>p<25?"#22C55E":p<50?"#F59E0B":p<75?"#F97316":"#EF4444";
 let DATA={},HOURS=null,EVENTS=null,FACILITY="ARC Access";
 
@@ -703,7 +706,7 @@ function renderBoard(){
   const n=z.now;const col=LOADCOLOR(n.pct);
   const tcbg=n.verdict.includes("Quiet")?"rgba(34,197,94,0.1)":n.verdict.includes("Busier")?"rgba(239,68,68,0.1)":"rgba(245,158,11,0.1)";
   const tccol=n.verdict.includes("Quiet")?"#22C55E":n.verdict.includes("Busier")?"#EF4444":"#D97706";
-  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+' clients inside</span></div>'+
+  el.innerHTML='<div class="board"><div class="count">'+n.cur.toLocaleString()+'<span class="of">of '+z.max.toLocaleString()+' people inside</span></div>'+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<div class="pctbar"><span style="width:'+Math.min(100,n.pct)+'%;background:'+col+'"></span></div>'+
     '<div class="when">'+Math.round(n.pct)+'% full &middot; usually ~'+Math.round(n.normal)+'% at this hour &middot; '+DOWFULL[n.now?n.dow:n.dow]+' '+fmtH(n.hour)+'</div>'+
@@ -725,11 +728,11 @@ function renderForecast(){
   fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="5" fill="'+LOADCOLOR(f.pct)+'" stroke="#ffffff" stroke-width="2" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
     if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-4)+'" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6B7280">'+fmtH(f.h)+'</text>';});
   const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(29, 78, 216, 0.05)"/><path d="'+line+'" fill="none" stroke="#1D4ED8" stroke-width="3"/>'+dots+xlab+'</svg>';
-  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted load timeline &middot; click standard data node</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap points along the projection curve for a specific estimate.</div></div>';
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">Percentages indicate how close the space is to maximum legal capacity</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap points along the projection curve for a specific estimate.</div></div>';
   el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
     const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.max*p/100);
     const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
-    document.getElementById('fcTip').innerHTML='<span>⚡ Estimated projection at <b>'+fmtH(h)+'</b> is ~<b>'+p+'%</b> full (&nbsp;~'+ppl.toLocaleString()+' of '+z.max.toLocaleString()+' clients inside&nbsp;) &middot; status is <b>'+lbl+'</b></span>';}));
+    document.getElementById('fcTip').innerHTML='<span>⚡ Estimated projection at <b>'+fmtH(h)+'</b> is ~<b>'+p+'%</b> full (&nbsp;~'+ppl.toLocaleString()+' people inside&nbsp;) &middot; status is <b>'+lbl+'</b></span>';}));
 }
 
 function renderBest(){
@@ -746,7 +749,7 @@ function renderHeat(){
   const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
   let h='<table class="heat"><tr><th></th>';for(let hr=6;hr<24;hr++)h+='<th>'+fmtH(hr)+'</th>';h+='</tr>';
   for(let d=0;d<7;d++){h+='<tr><th style="text-align:right;padding-right:8px">'+DOW[d]+'</th>';
-    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#F9FAFB":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#111827");
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#F9FAFB":HEATCOLOR(p);const t=p==null?"":(p>=35?"#111827":"#111827");
       h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':Math.round(p)+'%')+'">'+(p==null?'':Math.round(p))+'</td>';}h+='</tr>';}
   h+='</table>';document.getElementById("heat").innerHTML=h;
 }
@@ -761,7 +764,7 @@ function renderHours(){
   else{const mins=now.getHours()*60+now.getMinutes();const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
     let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];if(today.close==="24:00")closeM=1440;
     const isOpen=mins>=openM&&mins<closeM;
-    html+='<div class="hours-pill"><span class="st '+(isOpen?'open':'closed')+'">'+(isOpen?'Open Now':'Closed')+'</span><span>Today from '+fmtClock(today.open)+' to '+fmtClock(today.close)+'</span></div>';
+    html+='<div class="hours-pill"><span class="st '+(isOpen?'open':'closed')+'">'+(isOpen?'Open Now':'Closed')+'</span><span>&nbsp;&middot;&nbsp;Today from '+fmtClock(today.open)+' to '+fmtClock(today.close)+'</span></div>';
     if(isOpen&&closeM-mins<=60)html+='<div class="hours-warn closing">Closing soon &mdash; facility locks up at '+fmtClock(today.close)+' today.</div>';}
   const warns=[];for(let i=1;i<=7;i++){const d=new Date(now);d.setDate(now.getDate()+i);const k=dateKey(d);
     if(HOURS.special&&HOURS.special[k]){const s=HOURS.special[k];const lbl=DOW[(d.getDay()+6)%7]+' '+MONTHABBR[d.getMonth()]+' '+d.getDate();
