@@ -168,7 +168,6 @@
   <section><div class="eyebrow">Right now</div><div id="board"></div></section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
   <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
-  <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
   <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
     <div class="heat-legend"><span>Quieter</span>
       <span class="hl-swatch" style="background:#e3f2ea"></span><span class="hl-swatch" style="background:#bfe3cf"></span>
@@ -176,7 +175,8 @@
       <span class="hl-swatch" style="background:#d6373a"></span><span>Busier</span>
       <span class="hl-note">· % full · blank = no data yet</span></div>
   </section>
-  <section><div class="eyebrow">Hours calendar</div><div id="hoursBannerMini" style="margin-bottom:12px"></div><div id="calendar"></div></section>
+  <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
+  <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
 </main>
 <footer><div class="wrap">
   ARC PULSE · live public facility-occupancy data · aggregate counts only, no personal data<br/>
@@ -314,10 +314,10 @@ function hoursForDay(d){
   return season.weekday;
 }
 function renderHours(){
-  const el=document.getElementById("hoursBanner");const mini=document.getElementById("hoursBannerMini");
+  const el=document.getElementById("hoursBanner");
   const set=hoursSetFor();
-  if(!set){el.innerHTML='';if(mini)mini.innerHTML='';return;}
-  const now=pacificNow();const today=hoursForDay(now);if(!today){el.innerHTML='';if(mini)mini.innerHTML='';return;}
+  if(!set){el.innerHTML='';return;}
+  const now=pacificNow();const today=hoursForDay(now);if(!today){el.innerHTML='';return;}
   let html="";
   if(today.closed){html+='<div class="hours-pill"><span class="st closed">Closed today</span></div>';}
   else{const mins=now.getHours()*60+now.getMinutes();const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
@@ -330,7 +330,6 @@ function renderHours(){
       warns.push(s.closed?'<b>'+lbl+':</b> closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
   if(warns.length)html+='<div class="hours-warn">Heads up · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
   el.innerHTML=html;
-  if(mini)mini.innerHTML=html;
 }
 
 let calMonth=null,calYear=null;
