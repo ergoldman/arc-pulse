@@ -227,9 +227,12 @@ function analyze(rows){
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
     const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
     const latest=rs[rs.length-1];
-    const slot=cell[latest.dow+"-"+latest.hour]||[latest.pct];
-    const normal=avg(slot);const sd=slot.length>1?std(slot):1;const z=sd?(latest.pct-normal)/sd:0;
-    const verdict=z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
+    const slotRaw=cell[latest.dow+"-"+latest.hour];
+    const hasHistory=slotRaw&&slotRaw.length>0;
+    const normal=hasHistory?avg(slotRaw):null;
+    const sd=hasHistory&&slotRaw.length>1?std(slotRaw):1;
+    const z=(hasHistory&&sd)?(latest.pct-normal)/sd:0;
+    const verdict=!hasHistory?"Not enough data yet":z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
     const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
     const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
     const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
@@ -246,11 +249,14 @@ function renderBoard(){
   const z=DATA[FACILITY];const el=document.getElementById("board");
   if(!z){el.innerHTML='<div class="board">No data yet for this facility.</div>';return;}
   const n=z.now;
-  const tcbg=n.verdict.includes("Quiet")?"var(--calmbg)":n.verdict.includes("Busier")?"var(--hotbg)":"var(--modbg)";
+  const tcbg=n.verdict.includes("Quiet")?"var(--calmbg)":n.verdict.includes("Busier")?"var(--hotbg)":n.verdict.includes("Not enough")?"var(--modbg)":"var(--modbg)";
   const tccol=n.verdict.includes("Quiet")?"var(--calm)":n.verdict.includes("Busier")?"var(--hot)":"#96700e";
+  const cntLine=n.normal!=null
+    ? n.cur.toLocaleString()+' of '+z.max.toLocaleString()+' people · usually ~'+Math.round(n.normal)+'%'
+    : n.cur.toLocaleString()+' of '+z.max.toLocaleString()+' people · no history yet for this day &amp; time';
   el.innerHTML='<div class="board">'+ring(n.pct)+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
-    '<span class="cnt">'+n.cur.toLocaleString()+' of '+z.max.toLocaleString()+' people · usually ~'+Math.round(n.normal)+'%</span>'+
+    '<span class="cnt">'+cntLine+'</span>'+
     '<div class="when">'+DOWFULL[n.dow]+' · '+fmtH(n.hour)+' now</div>'+
     '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
