@@ -91,6 +91,12 @@
   .bt-day .d{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub)}
   .bt-day .time{font-family:'Sora',sans-serif;font-weight:700;font-size:21px;color:var(--blue-d);margin:6px 0 2px}
   .bt-day .pct{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--calm)}
+  .ev-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+  .ev-item{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:11px 14px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+  .ev-time{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;color:var(--blue-d);white-space:nowrap;min-width:130px}
+  .ev-body .title{font-weight:600;font-size:13.5px}
+  .ev-body .loc{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--sub);margin-top:2px}
+  .ev-empty{color:var(--sub);font-size:14px}
 
   .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .cal-head button{font-family:'IBM Plex Mono',monospace;font-size:14px;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;width:32px;height:32px;cursor:pointer}
@@ -158,9 +164,11 @@
   </div>
 </div>
 <main class="wrap">
-  <section><div class="eyebrow">Right now</div><div id="board"></div><div id="hoursBanner" style="margin-top:14px"></div></section>
+  <div id="hoursBanner" style="margin:20px 0"></div>
+  <section><div class="eyebrow">Right now</div><div id="board"></div></section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
   <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
+  <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
   <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
     <div class="heat-legend"><span>Quieter</span>
       <span class="hl-swatch" style="background:#e3f2ea"></span><span class="hl-swatch" style="background:#bfe3cf"></span>
@@ -168,14 +176,15 @@
       <span class="hl-swatch" style="background:#d6373a"></span><span>Busier</span>
       <span class="hl-note">· % full · blank = no data yet</span></div>
   </section>
-  <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
+  <section><div class="eyebrow">Hours calendar</div><div id="hoursBannerMini" style="margin-bottom:12px"></div><div id="calendar"></div></section>
 </main>
 <footer><div class="wrap">
   ARC PULSE · live public facility-occupancy data · aggregate counts only, no personal data<br/>
   <span id="freshness"></span>
 </div></footer>
 <script>
-const CSV_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv",HOURS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json";
+const CSV_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/arc_occupancy.csv",HOURS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/hours.json",EVENTS_URL="https://raw.githubusercontent.com/ergoldman/arc-pulse/data/events.json";
+let EVENTS=null;
 const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -305,9 +314,10 @@ function hoursForDay(d){
   return season.weekday;
 }
 function renderHours(){
-  const el=document.getElementById("hoursBanner");const set=hoursSetFor();
-  if(!set){el.innerHTML='';return;}
-  const now=pacificNow();const today=hoursForDay(now);if(!today){el.innerHTML='';return;}
+  const el=document.getElementById("hoursBanner");const mini=document.getElementById("hoursBannerMini");
+  const set=hoursSetFor();
+  if(!set){el.innerHTML='';if(mini)mini.innerHTML='';return;}
+  const now=pacificNow();const today=hoursForDay(now);if(!today){el.innerHTML='';if(mini)mini.innerHTML='';return;}
   let html="";
   if(today.closed){html+='<div class="hours-pill"><span class="st closed">Closed today</span></div>';}
   else{const mins=now.getHours()*60+now.getMinutes();const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
@@ -320,6 +330,7 @@ function renderHours(){
       warns.push(s.closed?'<b>'+lbl+':</b> closed':'<b>'+lbl+':</b> '+fmtClock(s.open)+'–'+fmtClock(s.close));}}
   if(warns.length)html+='<div class="hours-warn">Heads up · '+warns.slice(0,4).join(' &nbsp;·&nbsp; ')+'</div>';
   el.innerHTML=html;
+  if(mini)mini.innerHTML=html;
 }
 
 let calMonth=null,calYear=null;
@@ -343,14 +354,26 @@ function renderCalendar(){
 }
 function calStep(n){calMonth+=n;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 
+function renderEvents(){
+  const sec=document.getElementById("sec-events"),el=document.getElementById("events");
+  if(FACILITY!=="ARC Access"||!EVENTS||!EVENTS.days){sec.classList.add("hidden");return;}
+  const now=pacificNow();const key=dateKey(now);
+  const today=EVENTS.days[key];
+  if(!today||!today.length){sec.classList.add("hidden");return;}
+  sec.classList.remove("hidden");
+  let h='<div class="ev-list">';
+  today.forEach(e=>{h+='<div class="ev-item"><div class="ev-time">'+e.time+'</div><div class="ev-body"><div class="title">'+e.title+'</div>'+(e.loc?'<div class="loc">'+e.loc+'</div>':'')+'</div></div>';});
+  h+='</div>';el.innerHTML=h;
+}
 function setFacility(f){FACILITY=f;
   document.getElementById("tab-arc").classList.toggle("on",f==="ARC Access");
   document.getElementById("tab-pool").classList.toggle("on",f==="Recreation Pool");
   calMonth=null;calYear=null; // reset calendar to current month on facility switch
-  renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();}
-function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();}
+  renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();renderEvents();}
+function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();renderEvents();}
 
 fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
 fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
   const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
   DATA=analyze(rows);renderAll();
