@@ -43,6 +43,8 @@
   .prefs-divider{border-top:1px solid var(--line);margin:12px 0}
   .prefs-fav-row{display:flex;gap:8px;margin:8px 0 4px;padding-left:24px}
   .prefs-fav-row select{font-family:'Inter',sans-serif;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .prefs-fac-row{padding-left:24px;margin:-2px 0 8px}
+  .prefs-fac-row select{font-family:'Inter',sans-serif;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--sub)}
   .tabs{display:flex;gap:4px;margin-top:16px}
   .tabs button{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;padding:10px 20px;background:transparent;color:var(--sub);border:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:.15s;border-radius:6px 6px 0 0}
   .tabs button.on{color:var(--blue-d);border-bottom-color:var(--blue-d);background:rgba(20,73,168,.05)}
@@ -141,11 +143,14 @@
   <div id="prefsPanel" class="prefs-panel hidden">
     <div class="prefs-title">Notify me about:</div>
     <label class="prefs-row"><input type="checkbox" id="pref-closing" checked> Closing soon</label>
+    <div class="prefs-fac-row"><select id="pref-closing-fac"><option value="both">ARC + Pool</option><option value="arc">ARC only</option><option value="pool">Pool only</option></select></div>
     <label class="prefs-row"><input type="checkbox" id="pref-opening" checked> Opening soon + today's forecast (quietest &amp; busiest times)</label>
+    <div class="prefs-fac-row"><select id="pref-opening-fac"><option value="both">ARC + Pool</option><option value="arc">ARC only</option><option value="pool">Pool only</option></select></div>
     <label class="prefs-row"><input type="checkbox" id="pref-tomorrow" checked> Holiday / special hours heads-up</label>
+    <div class="prefs-fac-row"><select id="pref-tomorrow-fac"><option value="both">ARC + Pool</option><option value="arc">ARC only</option><option value="pool">Pool only</option></select></div>
     <div class="prefs-divider"></div>
     <div class="prefs-title">My favorite time to go</div>
-    <label class="prefs-row"><input type="checkbox" id="pref-fav-enabled"> Remind me when it opens</label>
+    <label class="prefs-row"><input type="checkbox" id="pref-fav-enabled"> Tell me how busy this time is predicted to be</label>
     <div class="prefs-fav-row">
       <select id="pref-fav-facility">
         <option value="ARC Access">ARC</option>
@@ -175,7 +180,7 @@
       <span class="hl-swatch" style="background:#d6373a"></span><span>Busier</span>
       <span class="hl-note">· % full · blank = no data yet</span></div>
   </section>
-  <section id="sec-events" class="hidden"><div class="eyebrow">Today at the ARC — classes &amp; reservations</div><div id="events"></div></section>
+  <section id="sec-events" class="hidden"><div class="eyebrow" id="eventsHeading">Today — classes &amp; reservations</div><div id="events"></div></section>
   <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
 </main>
 <footer><div class="wrap">
@@ -354,12 +359,15 @@ function renderCalendar(){
 function calStep(n){calMonth+=n;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 
 function renderEvents(){
-  const sec=document.getElementById("sec-events"),el=document.getElementById("events");
-  if(FACILITY!=="ARC Access"||!EVENTS||!EVENTS.days){sec.classList.add("hidden");return;}
+  const sec=document.getElementById("sec-events"),el=document.getElementById("events"),heading=document.getElementById("eventsHeading");
+  const facEvents=EVENTS?EVENTS[facKey()]:null;
+  if(!facEvents||!facEvents.days){sec.classList.add("hidden");return;}
   const now=pacificNow();const key=dateKey(now);
-  const today=EVENTS.days[key];
+  const today=facEvents.days[key];
   if(!today||!today.length){sec.classList.add("hidden");return;}
   sec.classList.remove("hidden");
+  const label=FACILITY==="Recreation Pool"?"Pool":"ARC";
+  heading.textContent="Today at the "+label+" — classes & reservations";
   let h='<div class="ev-list">';
   today.forEach(e=>{h+='<div class="ev-item"><div class="ev-time">'+e.time+'</div><div class="ev-body"><div class="title">'+e.title+'</div>'+(e.loc?'<div class="loc">'+e.loc+'</div>':'')+'</div></div>';});
   h+='</div>';el.innerHTML=h;
@@ -411,12 +419,15 @@ async function saveSubs(list){
     headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
     body:JSON.stringify({subscriptions:list})});
 }
-const DEFAULT_PREFS={closing:true,opening:true,tomorrow:true,favoriteEnabled:false,favoriteFacility:"ARC Access",favoriteHour:15};
+const DEFAULT_PREFS={closing:true,closingFacility:"both",opening:true,openingFacility:"both",tomorrow:true,tomorrowFacility:"both",favoriteEnabled:false,favoriteFacility:"ARC Access",favoriteHour:15};
 function readPrefsFromForm(){
   return {
     closing:document.getElementById("pref-closing").checked,
+    closingFacility:document.getElementById("pref-closing-fac").value,
     opening:document.getElementById("pref-opening").checked,
+    openingFacility:document.getElementById("pref-opening-fac").value,
     tomorrow:document.getElementById("pref-tomorrow").checked,
+    tomorrowFacility:document.getElementById("pref-tomorrow-fac").value,
     favoriteEnabled:document.getElementById("pref-fav-enabled").checked,
     favoriteFacility:document.getElementById("pref-fav-facility").value,
     favoriteHour:parseInt(document.getElementById("pref-fav-hour").value,10),
@@ -424,8 +435,11 @@ function readPrefsFromForm(){
 }
 function fillPrefsForm(prefs){
   document.getElementById("pref-closing").checked=prefs.closing!==false;
+  document.getElementById("pref-closing-fac").value=prefs.closingFacility||"both";
   document.getElementById("pref-opening").checked=prefs.opening!==false;
+  document.getElementById("pref-opening-fac").value=prefs.openingFacility||"both";
   document.getElementById("pref-tomorrow").checked=prefs.tomorrow!==false;
+  document.getElementById("pref-tomorrow-fac").value=prefs.tomorrowFacility||"both";
   document.getElementById("pref-fav-enabled").checked=!!prefs.favoriteEnabled;
   document.getElementById("pref-fav-facility").value=prefs.favoriteFacility||"ARC Access";
   document.getElementById("pref-fav-hour").value=prefs.favoriteHour!=null?prefs.favoriteHour:15;
