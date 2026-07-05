@@ -160,10 +160,13 @@ def fmt_hour(h):
     return f"{hr}{ap}"
 
 def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
-    """Returns list of (title, body, tag) to send for this facility, and
-    mutates today_state[facility_name] with which alerts fired."""
+    """Returns list of (kind, title, body, tag, facility_key) to send for this
+    facility, and mutates today_state[facility_name] with which alerts fired.
+    facility_key is 'arc' or 'pool' — used to filter by each subscriber's
+    per-type facility preference (ARC only / Pool only / both)."""
     label = cfg["label"]
-    hset = hours_all.get(cfg["hours_key"])
+    fkey = cfg["hours_key"]  # 'arc' or 'pool'
+    hset = hours_all.get(fkey)
     fstate = today_state.setdefault(facility_name, {})
     to_send = []
     if not hset:
@@ -177,7 +180,7 @@ def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
         close_m = hm_to_minutes(today_hours["close"]) if today_hours["close"] != "24:00" else 1440
 
         if 0 <= close_m - cur_min <= CLOSING_WINDOW_MIN and not fstate.get("closing_sent"):
-            to_send.append(("closing", f"{label} closing soon", f"Closes in {close_m-cur_min} min today.", f"{facility_name}-closing"))
+            to_send.append(("closing", f"{label} closing soon", f"Closes in {close_m-cur_min} min today.", f"{facility_name}-closing", fkey))
             fstate["closing_sent"] = True
 
         # Combined: opening soon + today's forecast (quietest & busiest hour),
@@ -188,7 +191,7 @@ def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
             if qb:
                 body += (f" Quietest ~{fmt_hour(qb['quiet_hour'])} (~{qb['quiet_pct']:.0f}%), "
                          f"busiest ~{fmt_hour(qb['busy_hour'])} (~{qb['busy_pct']:.0f}%).")
-            to_send.append(("opening", f"{label} opening soon", body, f"{facility_name}-opening"))
+            to_send.append(("opening", f"{label} opening soon", body, f"{facility_name}-opening", fkey))
             fstate["opening_sent"] = True
 
     tomorrow = now + timedelta(days=1)
@@ -197,9 +200,9 @@ def check_facility(facility_name, cfg, hours_all, csv_lines, now, today_state):
     is_special = tmr_key in hset.get("special", {})
     if is_special and not fstate.get("tomorrow_sent"):
         if tmr_hours.get("closed"):
-            to_send.append(("tomorrow", f"{label} heads up", f"{label} is closed tomorrow.", f"{facility_name}-tomorrow"))
+            to_send.append(("tomorrow", f"{label} heads up", f"{label} is closed tomorrow.", f"{facility_name}-tomorrow", fkey))
         else:
-            to_send.append(("tomorrow", f"{label} heads up", f"{label} has special hours tomorrow: {tmr_hours['open']}–{tmr_hours['close']}.", f"{facility_name}-tomorrow"))
+            to_send.append(("tomorrow", f"{label} heads up", f"{label} has special hours tomorrow: {tmr_hours['open']}–{tmr_hours['close']}.", f"{facility_name}-tomorrow", fkey))
         fstate["tomorrow_sent"] = True
 
     return to_send
@@ -227,15 +230,18 @@ def main():
 
     if not all_to_send:
         print("No notifications to send this cycle.")
-    for kind, title, body, tag in all_to_send:
-        print(f"Sending [{kind}]: {title} — {body}")
+    for kind, title, body, tag, fkey in all_to_send:
+        print(f"Sending [{kind}/{fkey}]: {title} — {body}")
         sent = 0
         for entry in subs_raw:
             # Support both old (raw subscription) and new ({sub, prefs}) shapes.
             sub = entry.get("sub", entry)
-            prefs = entry.get("prefs", {"closing": True, "opening": True, "tomorrow": True, "forecast": True})
+            prefs = entry.get("prefs", {"closing": True, "opening": True, "tomorrow": True})
             if not prefs.get(kind, True):
                 continue  # this subscriber opted out of this notification type
+            scope = prefs.get(kind + "Facility", "both")  # 'arc' | 'pool' | 'both'
+            if scope != "both" and scope != fkey:
+                continue  # this subscriber only wants the other facility
             if send_push(sub, title, body, tag):
                 sent += 1
         print(f"  sent to {sent}/{len(subs_raw)} subscribers (after preference filter)")
