@@ -21,6 +21,15 @@ TIME_RANGE_RE = re.compile(
     r'^\d{1,2}:\d{2}\s*[AP]M\s*-\s*\d{1,2}:\d{2}\s*[AP]M$')
 DAY_NUM_RE = re.compile(r'^\d{1,2}$')
 LOC_RE = re.compile(r'^(.*)\(([^)]+)\)\s*$')
+# Titles matching this aren't real "events" worth tracking:
+#  - "* Open (* Hours)" is just the facility's open/closed marker, not an
+#    activity — it's present at every hour of every day with zero variation,
+#    so it can never correlate with anything and is excluded on that basis.
+# NOTE: Racquetball Court Reservation is intentionally KEPT (not excluded).
+# We haven't yet verified whether it correlates with occupancy — that
+# requires enough overlapping occupancy+schedule history to test properly.
+# Revisit this decision once more July+ data has accumulated.
+EXCLUDE_RE = re.compile(r'Open\s*\(.*Hours\)', re.I)
 
 def parse(text):
     lines = [l.strip() for l in text.strip().split("\n") if l.strip()]
@@ -76,6 +85,11 @@ def parse(text):
             time_range = line
             title_line = lines[i+1] if i+1 < len(lines) else ""
             i += 2
+            # Skip non-events BEFORE splitting off the location, since the
+            # exclusion pattern needs to see the full raw line (e.g. the
+            # facility-hours marker only matches with its "(...Hours)" intact).
+            if EXCLUDE_RE.search(title_line):
+                continue
             m = LOC_RE.match(title_line)
             if m:
                 title, loc = m.group(1).strip(" -"), m.group(2).strip()
