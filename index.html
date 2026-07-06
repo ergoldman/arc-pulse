@@ -210,10 +210,42 @@ function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);const head=lines[0].split(",");
   return lines.slice(1).map(l=>{const p=l.split(",");const o={};head.forEach((h,i)=>o[h]=p[i]);
     const dtUTC=new Date(o.timestamp+"Z");const pac=new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
-    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC};
+    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC,pacDate:pac};
   }).filter(r=>r.name&&!isNaN(r.pct)&&r.name!=="Rock Wall");
 }
-function isOpenHour(dow,hour){return dow>=5?(hour>=8&&hour<=23):(hour>=5&&hour<=23);}
+// Maps a raw CSV facility name to its hours.json key ('arc'/'pool'), so we
+// can check REAL open hours (accounting for summer season + special dates +
+// closures) regardless of which tab is currently selected on the site.
+const NAME_TO_HOURSKEY={"ARC Access":"arc","Recreation Pool":"pool"};
+function hoursForDayGeneric(hoursKey, d){
+  if(!HOURS)return null;
+  const set=HOURS[hoursKey];
+  if(!set) return null;
+  const key=dateKey(d);
+  if(set.special&&set.special[key])return set.special[key];
+  const weekend=(d.getDay()===0||d.getDay()===6);
+  const season=isSummer(d)?set.summer:set.regular;
+  if(weekend)return season.weekend;
+  if(d.getDay()===5 && season.friday) return season.friday;
+  return season.weekday;
+}
+// Was this facility ACTUALLY open at this reading's real date+hour, per the
+// real published hours (not a generic weekday/weekend guess)? Readings taken
+// while closed are excluded from every historical average (heatmap, best
+// times, forecast, "usually ~X%") — this applies retroactively to any past
+// reading and automatically to all future ones as new data comes in.
+function wasActuallyOpen(row){
+  const hoursKey=NAME_TO_HOURSKEY[row.name];
+  if(!hoursKey)return true; // unknown facility (e.g. old Rock Wall data) - don't block it here, other filters handle it
+  const today=hoursForDayGeneric(hoursKey, row.pacDate);
+  if(!today)return true; // hours data not loaded yet - fail open rather than silently dropping everything
+  if(today.closed)return false;
+  const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
+  let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];
+  if(today.close==="24:00")closeM=1440;
+  const rowM=row.hour*60; // compare by the hour bucket (readings are hourly-bucketed for analysis)
+  return rowM>=openM && rowM<closeM;
+}
 
 function analyze(rows){
   const zones={};rows.forEach(r=>{(zones[r.name]=zones[r.name]||[]).push(r);});
@@ -221,7 +253,7 @@ function analyze(rows){
   for(const [name,rs] of Object.entries(zones)){
     rs.sort((a,b)=>a.dt-b.dt);const max=rs[rs.length-1].max;
     const cell={},hourly={};
-    rs.filter(r=>isOpenHour(r.dow,r.hour)&&r.pct>0).forEach(r=>{
+    rs.filter(r=>wasActuallyOpen(r)&&r.pct>0).forEach(r=>{
       (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
       (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);});
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
@@ -283,12 +315,46 @@ function renderForecast(){
     document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% full · ~'+ppl.toLocaleString()+' of '+z.max.toLocaleString()+' · <b>'+lbl+'</b>';}));
 }
 
+// Find the next real calendar date (today or later) matching a given weekday
+// index (0=Mon..6=Sun), so we can cross-check that SPECIFIC date's schedule.
+function nextDateForDow(targetDow){
+  const now=pacificNow();
+  const todayDow=(now.getDay()+6)%7;
+  const diff=(targetDow-todayDow+7)%7;
+  const d=new Date(now);d.setDate(now.getDate()+diff);
+  return d;
+}
+// Only flag events that plausibly bring a meaningful number of EXTRA people
+// into the whole building (camps bringing outside kids across several
+// courts). Ordinary single-court reservations or one group-ex class don't
+// move a building-wide headcount enough to matter, so we don't flag those.
+function hasCampDuringHour(dateStr, hour){
+  const facEvents=EVENTS?EVENTS[facKey()]:null;
+  const dayEvents=facEvents&&facEvents.days?facEvents.days[dateStr]:null;
+  if(!dayEvents)return false;
+  return dayEvents.some(e=>{
+    if(!/camp/i.test(e.title))return false;
+    const m=e.time.match(/(\d{1,2}):(\d{2})\s*([AP]M)\s*-\s*(\d{1,2}):(\d{2})\s*([AP]M)/i);
+    if(!m)return false;
+    const to24=(h,ap)=>{h=+h;if(/pm/i.test(ap)&&h!==12)h+=12;if(/am/i.test(ap)&&h===12)h=0;return h;};
+    const startH=to24(m[1],m[3]),endH=to24(m[4],m[6]);
+    return hour>=startH&&hour<endH;
+  });
+}
 function renderBest(){
   const z=DATA[FACILITY];const el=document.getElementById("bestTimes");
   if(!z||!z.best.length){el.innerHTML='<div style="color:var(--sub);font-size:14px">Not enough data yet.</div>';return;}
   let h='<div class="bt-grid">';
   for(let d=0;d<7;d++){const b=z.best.find(x=>x.d===d);
-    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
+    let flag="";
+    if(b){
+      const dateForDay=nextDateForDow(d);
+      const dateStr=dateKey(dateForDay);
+      if(hasCampDuringHour(dateStr,b.h)){
+        flag='<div class="bt-flag" title="A camp is scheduled during this hour — may run busier than the historical average suggests.">⚠ camp scheduled</div>';
+      }
+    }
+    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>'+flag:'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
   h+='</div>';el.innerHTML=h;
 }
 
@@ -385,9 +451,11 @@ function setFacility(f){FACILITY=f;
   renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();renderEvents();}
 function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();renderEvents();}
 
-fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+const hoursReady = fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
 fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
-fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
+// Wait for HOURS before analyzing occupancy, so the real-hours-aware filter
+// (wasActuallyOpen) has real data to check against instead of failing open.
+hoursReady.then(()=>fetch(CSV_URL+"?t="+Date.now())).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
   const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
   DATA=analyze(rows);renderAll();
   const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
