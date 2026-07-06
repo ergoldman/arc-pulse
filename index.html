@@ -466,7 +466,7 @@ hoursReady.then(()=>fetch(CSV_URL+"?t="+Date.now())).then(r=>{if(!r.ok)throw new
 /* ===== NOTIFICATIONS (Web Push) ===== */
 // Your site's public VAPID key (safe to expose client-side; pairs with the
 // private key kept secret in the GitHub Action that sends pushes).
-const VAPID_PUBLIC_KEY = "BCrCSjG_1ZLLBafSolBOFytNfvt5lKcyVfVH2hYXcH5tuBJbX1KfhcTFdiQeaEhKQWKN-yMS2t2MnckXgSQ4DvM";
+const VAPID_PUBLIC_KEY = "BD_uIYiZjDyRVTDsnPaKpglDpOn3ZcC8Qo4VIJ0yqZde3RIWSM3zOEdjaDzR_CeIG9Dunrds6aLB6JD_BgbOINM";
 // jsonbin.io stores push subscriptions so the GitHub Action can read them.
 // NOTE: this key is visible in page source (unavoidable on a static site).
 // It only controls this one small bin, not your GitHub repo — low risk.
