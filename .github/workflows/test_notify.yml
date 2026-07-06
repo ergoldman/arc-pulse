@@ -1,0 +1,27 @@
+name: Send Test Notification
+
+on:
+  workflow_dispatch:   # manual trigger only — no schedule
+
+jobs:
+  test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pywebpush requests
+
+      - name: Send test push to all subscribers
+        run: python test_notification.py
+        env:
+          VAPID_PRIVATE_KEY_PEM: ${{ secrets.VAPID_PRIVATE_KEY_PEM }}
+          VAPID_CLAIM_EMAIL: ${{ secrets.VAPID_CLAIM_EMAIL }}
+          JSONBIN_ID: ${{ secrets.JSONBIN_ID }}
+          JSONBIN_KEY: ${{ secrets.JSONBIN_KEY }}
