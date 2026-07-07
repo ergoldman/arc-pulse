@@ -4,7 +4,9 @@
     "tomorrow_sent": true
   },
   "2026-07-06": {
-    "ARC Access": {},
+    "ARC Access": {
+      "closing_sent": true
+    },
     "Recreation Pool": {
       "closing_sent": true
     }
