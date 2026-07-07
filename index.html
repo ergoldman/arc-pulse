@@ -451,22 +451,49 @@ function setFacility(f){FACILITY=f;
   renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();renderEvents();}
 function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();renderEvents();}
 
-const hoursReady = fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
-fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
-// Wait for HOURS before analyzing occupancy, so the real-hours-aware filter
-// (wasActuallyOpen) has real data to check against instead of failing open.
-hoursReady.then(()=>fetch(CSV_URL+"?t="+Date.now())).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
-  const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
-  DATA=analyze(rows);renderAll();
-  const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
-  const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
-  document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
-}).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
+let lastLoadTime = 0;
+const MIN_RELOAD_GAP_MS = 60 * 1000; // don't refetch more than once a minute
+
+function loadAllData(showLoadingBar){
+  lastLoadTime = Date.now();
+  if(showLoadingBar){
+    const st=document.getElementById("statusbar");
+    st.style.display="";st.className="statusbar loading";st.textContent="Refreshing…";
+  }
+  const hoursReady = fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+  fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
+  // Wait for HOURS before analyzing occupancy, so the real-hours-aware filter
+  // (wasActuallyOpen) has real data to check against instead of failing open.
+  return hoursReady.then(()=>fetch(CSV_URL+"?t="+Date.now())).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
+    const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
+    DATA=analyze(rows);renderAll();
+    const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
+    const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
+    document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
+  }).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
+}
+
+// Initial load on first page open.
+loadAllData(false);
+
+// Re-fetch fresh data whenever the app/tab becomes visible again — this is
+// what fixes the "app shows stale data unless fully closed and reopened"
+// problem in the wrapped iOS app (and stale browser tabs too). WKWebView
+// (used by the Capacitor app) keeps the page state across backgrounding, so
+// without this, reopening the app just shows whatever was last rendered.
+function maybeRefresh(){
+  if(document.visibilityState==="visible" && Date.now()-lastLoadTime>MIN_RELOAD_GAP_MS){
+    loadAllData(true);
+  }
+}
+document.addEventListener("visibilitychange", maybeRefresh);
+window.addEventListener("pageshow", maybeRefresh);       // iOS Safari/WKWebView back-forward cache
+window.addEventListener("focus", maybeRefresh);          // extra safety net for some webview quirks
 
 /* ===== NOTIFICATIONS (Web Push) ===== */
 // Your site's public VAPID key (safe to expose client-side; pairs with the
 // private key kept secret in the GitHub Action that sends pushes).
-const VAPID_PUBLIC_KEY = "BD_uIYiZjDyRVTDsnPaKpglDpOn3ZcC8Qo4VIJ0yqZde3RIWSM3zOEdjaDzR_CeIG9Dunrds6aLB6JD_BgbOINM";
+const VAPID_PUBLIC_KEY = "BCrCSjG_1ZLLBafSolBOFytNfvt5lKcyVfVH2hYXcH5tuBJbX1KfhcTFdiQeaEhKQWKN-yMS2t2MnckXgSQ4DvM";
 // jsonbin.io stores push subscriptions so the GitHub Action can read them.
 // NOTE: this key is visible in page source (unavoidable on a static site).
 // It only controls this one small bin, not your GitHub repo — low risk.
