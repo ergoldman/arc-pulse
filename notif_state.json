@@ -5,6 +5,8 @@
   },
   "2026-07-06": {
     "ARC Access": {},
-    "Recreation Pool": {}
+    "Recreation Pool": {
+      "closing_sent": true
+    }
   }
 }
