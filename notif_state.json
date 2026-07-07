@@ -1,8 +1,4 @@
 {
-  "2026-07-04": {
-    "quiet_sent": true,
-    "tomorrow_sent": true
-  },
   "2026-07-06": {
     "ARC Access": {
       "closing_sent": true
@@ -10,5 +6,9 @@
     "Recreation Pool": {
       "closing_sent": true
     }
+  },
+  "2026-07-07": {
+    "ARC Access": {},
+    "Recreation Pool": {}
   }
 }
