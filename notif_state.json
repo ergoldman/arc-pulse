@@ -12,7 +12,8 @@
       "opening_sent": true
     },
     "Recreation Pool": {
-      "opening_sent": true
+      "opening_sent": true,
+      "closing_sent": true
     }
   }
 }
