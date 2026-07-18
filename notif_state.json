@@ -25,7 +25,8 @@
     },
     "Recreation Pool": {
       "tomorrow_sent": true,
-      "opening_sent": true
+      "opening_sent": true,
+      "closing_sent": true
     }
   }
 }
