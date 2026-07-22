@@ -298,17 +298,6 @@ function analyze(rows){
   }
   return out;
 }
-    const normal=hasHistory?avg(slotRaw):null;
-    const sd=hasHistory&&slotRaw.length>1?std(slotRaw):1;
-    const z=(hasHistory&&sd)?(latest.pct-normal)/sd:0;
-    const verdict=!hasHistory?"Not enough data yet":z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
-    const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
-    const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
-    const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
-    out[name]={max,now:{cur:latest.cur,pct:latest.pct,hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
-  }
-  return out;
-}
 
 function ring(pct){
   const r=50,c=2*Math.PI*r,off=c*(1-pct/100);const col=LOADCOLOR(pct);
