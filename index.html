@@ -170,7 +170,11 @@
 </div>
 <main class="wrap">
   <div id="hoursBanner" style="margin:20px 0"></div>
-  <section><div class="eyebrow">Right now</div><div id="board"></div></section>
+  <section><div class="eyebrow">Right now</div><div id="board"></div>
+    <div style="font-size:12px;color:var(--sub);line-height:1.5;margin-top:10px;padding:10px 12px;background:var(--surface-1,#f7f8fa);border-radius:8px">
+      <b>How the estimate works:</b> every time the official count goes up, that's a real arrival. We assume each person's visit length varies — most stay around an hour, some leave sooner, some later — so instead of waiting for the source to report an exit, we gradually "fade out" each arrival over time based on how long visits typically last. The % you see is that estimated number of people still likely present, divided by the highest we've realistically seen recently (not the building's official max capacity).
+    </div>
+  </section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
   <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
   <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
@@ -228,7 +232,7 @@ function isOpenHour(dow,hour){return dow>=5?(hour>=8&&hour<=23):(hour>=5&&hour<=
 // Tuned so the typical stay is ~70 minutes, with realistic spread (some
 // people 30min, some 2+ hours). These two constants are the only tuning
 // knobs -- adjust DWELL_SCALE_MIN to shift the typical stay length.
-const DWELL_SCALE_MIN = 79;   // Weibull scale parameter (minutes)
+const DWELL_SCALE_MIN = 68;   // Weibull scale parameter (minutes) -- tuned for ~60min typical stay
 const DWELL_SHAPE_K = 2;      // Weibull shape parameter (peakedness)
 const DWELL_LOOKBACK_MIN = 240; // ignore arrival batches older than this (negligible survival probability by then)
 
@@ -349,7 +353,7 @@ function renderBoard(){
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<span class="cnt">'+cntLine+'</span>'+
     '<div class="when">'+DOWFULL[n.dow]+' · '+fmtH(n.hour)+' now</div>'+
-    '<div class="official" style="font-size:11px;color:var(--sub);margin-top:6px">% shown is relative to the typical recent peak (~'+n.peakCount.toLocaleString()+' people, last 30 days) — not official building capacity ('+z.max.toLocaleString()+'). Official source count right now: '+n.cur.toLocaleString()+' ('+Math.round(n.pct)+'% of capacity).</div>'+
+    '<div class="official" style="font-size:11px;color:var(--sub);margin-top:6px">% shown is relative to the typical recent peak (~'+n.peakCount.toLocaleString()+' people, last 30 days)</div>'+
     '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
 
@@ -370,9 +374,9 @@ function renderForecast(){
   const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(20,73,168,0.08)"/><path d="'+line+'" fill="none" stroke="#1449a8" stroke-width="2.5"/>'+dots+xlab+'</svg>';
   el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted % full · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
   el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
-    const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.max*p/100);
+    const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.now.peakCount*p/100);
     const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
-    document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% full · ~'+ppl.toLocaleString()+' of '+z.max.toLocaleString()+' · <b>'+lbl+'</b>';}));
+    document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% of typical peak · ~'+ppl.toLocaleString()+' people · <b>'+lbl+'</b>';}));
 }
 
 function renderBest(){
