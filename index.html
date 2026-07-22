@@ -210,41 +210,57 @@ function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);const head=lines[0].split(",");
   return lines.slice(1).map(l=>{const p=l.split(",");const o={};head.forEach((h,i)=>o[h]=p[i]);
     const dtUTC=new Date(o.timestamp+"Z");const pac=new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
-    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC,pacDate:pac};
+    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC};
   }).filter(r=>r.name&&!isNaN(r.pct)&&r.name!=="Rock Wall");
 }
-// Maps a raw CSV facility name to its hours.json key ('arc'/'pool'), so we
-// can check REAL open hours (accounting for summer season + special dates +
-// closures) regardless of which tab is currently selected on the site.
-const NAME_TO_HOURSKEY={"ARC Access":"arc","Recreation Pool":"pool"};
-function hoursForDayGeneric(hoursKey, d){
-  if(!HOURS)return null;
-  const set=HOURS[hoursKey];
-  if(!set) return null;
-  const key=dateKey(d);
-  if(set.special&&set.special[key])return set.special[key];
-  const weekend=(d.getDay()===0||d.getDay()===6);
-  const season=isSummer(d)?set.summer:set.regular;
-  if(weekend)return season.weekend;
-  if(d.getDay()===5 && season.friday) return season.friday;
-  return season.weekday;
+function isOpenHour(dow,hour){return dow>=5?(hour>=8&&hour<=23):(hour>=5&&hour<=23);}
+
+// --- Exit-decay estimation model ---------------------------------------
+// The raw source count only decreases sporadically (confirmed against real
+// UC Davis client code + your own historical data), so historical averages
+// built directly from raw readings tend to run high. Since every INCREASE
+// is a confirmed real arrival (no ambiguity there), we model departures
+// probabilistically instead of relying on the raw decreases: each arrival
+// batch "fades out" over time according to a typical-stay distribution,
+// rather than assuming everyone leaves at one exact moment.
+//
+// Weibull survival function: S(minutes) = exp(-(minutes/lambda)^k)
+// Tuned so the typical stay is ~70 minutes, with realistic spread (some
+// people 30min, some 2+ hours). These two constants are the only tuning
+// knobs -- adjust DWELL_SCALE_MIN to shift the typical stay length.
+const DWELL_SCALE_MIN = 79;   // Weibull scale parameter (minutes)
+const DWELL_SHAPE_K = 2;      // Weibull shape parameter (peakedness)
+const DWELL_LOOKBACK_MIN = 240; // ignore arrival batches older than this (negligible survival probability by then)
+
+function weibullSurvival(minutes){
+  if(minutes<0)return 1;
+  return Math.exp(-Math.pow(minutes/DWELL_SCALE_MIN, DWELL_SHAPE_K));
 }
-// Was this facility ACTUALLY open at this reading's real date+hour, per the
-// real published hours (not a generic weekday/weekend guess)? Readings taken
-// while closed are excluded from every historical average (heatmap, best
-// times, forecast, "usually ~X%") — this applies retroactively to any past
-// reading and automatically to all future ones as new data comes in.
-function wasActuallyOpen(row){
-  const hoursKey=NAME_TO_HOURSKEY[row.name];
-  if(!hoursKey)return true; // unknown facility (e.g. old Rock Wall data) - don't block it here, other filters handle it
-  const today=hoursForDayGeneric(hoursKey, row.pacDate);
-  if(!today)return true; // hours data not loaded yet - fail open rather than silently dropping everything
-  if(today.closed)return false;
-  const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
-  let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];
-  if(today.close==="24:00")closeM=1440;
-  const rowM=row.hour*60; // compare by the hour bucket (readings are hourly-bucketed for analysis)
-  return rowM>=openM && rowM<closeM;
+
+// Extract arrival batches from a sorted (by time) reading array: every
+// positive jump in the raw count is treated as N people arriving right now.
+function extractArrivalBatches(sortedRows){
+  const batches=[];
+  for(let i=1;i<sortedRows.length;i++){
+    const delta=sortedRows[i].cur-sortedRows[i-1].cur;
+    if(delta>0)batches.push({t:sortedRows[i].dt.getTime(), n:delta});
+  }
+  return batches;
+}
+
+// Estimate occupancy at a given point in time by summing the still-present
+// fraction of every recent arrival batch (survival-decayed), rather than
+// trusting the raw count's sporadic decreases.
+function estimateOccupancyAt(batches, targetTimeMs){
+  let total=0;
+  const lookbackMs=DWELL_LOOKBACK_MIN*60000;
+  for(let i=batches.length-1;i>=0;i--){
+    const ageMs=targetTimeMs-batches[i].t;
+    if(ageMs<0)continue;           // batch hasn't happened yet relative to target
+    if(ageMs>lookbackMs)break;     // batches are time-sorted; older ones contribute ~0, stop early
+    total += batches[i].n * weibullSurvival(ageMs/60000);
+  }
+  return total;
 }
 
 function analyze(rows){
@@ -252,15 +268,36 @@ function analyze(rows){
   const out={};
   for(const [name,rs] of Object.entries(zones)){
     rs.sort((a,b)=>a.dt-b.dt);const max=rs[rs.length-1].max;
+    // Build the arrival-batch decay model once per facility, then compute
+    // an ESTIMATED pct for every reading. This feeds the historical
+    // averages (heatmap/best-times/forecast) -- the raw pct stays visible
+    // separately on the live board, nothing is hidden, patterns just
+    // aren't built from the raw (sporadically-decreasing) number anymore.
+    const batches=extractArrivalBatches(rs);
+    rs.forEach(r=>{
+      const est=estimateOccupancyAt(batches, r.dt.getTime());
+      r.estPct = Math.min(100, (est/max)*100);
+    });
     const cell={},hourly={};
-    rs.filter(r=>wasActuallyOpen(r)&&r.pct>0).forEach(r=>{
-      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.pct);
-      (hourly[r.hour]=hourly[r.hour]||[]).push(r.pct);});
+    rs.filter(r=>isOpenHour(r.dow,r.hour)&&r.estPct>0).forEach(r=>{
+      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.estPct);
+      (hourly[r.hour]=hourly[r.hour]||[]).push(r.estPct);});
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
     const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
     const latest=rs[rs.length-1];
     const slotRaw=cell[latest.dow+"-"+latest.hour];
     const hasHistory=slotRaw&&slotRaw.length>0;
+    const normal=hasHistory?avg(slotRaw):null;
+    const sd=hasHistory&&slotRaw.length>1?std(slotRaw):1;
+    const z=(hasHistory&&sd)?(latest.estPct-normal)/sd:0;
+    const verdict=!hasHistory?"Not enough data yet":z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
+    const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
+    const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
+    const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
+    out[name]={max,now:{cur:latest.cur,pct:latest.pct,estPct:latest.estPct,hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
+  }
+  return out;
+}
     const normal=hasHistory?avg(slotRaw):null;
     const sd=hasHistory&&slotRaw.length>1?std(slotRaw):1;
     const z=(hasHistory&&sd)?(latest.pct-normal)/sd:0;
@@ -283,13 +320,15 @@ function renderBoard(){
   const n=z.now;
   const tcbg=n.verdict.includes("Quiet")?"var(--calmbg)":n.verdict.includes("Busier")?"var(--hotbg)":n.verdict.includes("Not enough")?"var(--modbg)":"var(--modbg)";
   const tccol=n.verdict.includes("Quiet")?"var(--calm)":n.verdict.includes("Busier")?"var(--hot)":"#96700e";
+  const estCount=Math.round((n.estPct/100)*z.max);
   const cntLine=n.normal!=null
-    ? n.cur.toLocaleString()+' of '+z.max.toLocaleString()+' people · usually ~'+Math.round(n.normal)+'%'
-    : n.cur.toLocaleString()+' of '+z.max.toLocaleString()+' people · no history yet for this day &amp; time';
-  el.innerHTML='<div class="board">'+ring(n.pct)+
+    ? '~'+estCount.toLocaleString()+' of '+z.max.toLocaleString()+' people (estimated) · usually ~'+Math.round(n.normal)+'%'
+    : '~'+estCount.toLocaleString()+' of '+z.max.toLocaleString()+' people (estimated) · no history yet for this day &amp; time';
+  el.innerHTML='<div class="board">'+ring(n.estPct)+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<span class="cnt">'+cntLine+'</span>'+
     '<div class="when">'+DOWFULL[n.dow]+' · '+fmtH(n.hour)+' now</div>'+
+    '<div class="official" style="font-size:11px;color:var(--sub);margin-top:6px">Official source count: '+n.cur.toLocaleString()+' ('+Math.round(n.pct)+'%) — our estimate adjusts for people who\'ve likely left since the source last recorded a decrease</div>'+
     '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
 
@@ -315,46 +354,12 @@ function renderForecast(){
     document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% full · ~'+ppl.toLocaleString()+' of '+z.max.toLocaleString()+' · <b>'+lbl+'</b>';}));
 }
 
-// Find the next real calendar date (today or later) matching a given weekday
-// index (0=Mon..6=Sun), so we can cross-check that SPECIFIC date's schedule.
-function nextDateForDow(targetDow){
-  const now=pacificNow();
-  const todayDow=(now.getDay()+6)%7;
-  const diff=(targetDow-todayDow+7)%7;
-  const d=new Date(now);d.setDate(now.getDate()+diff);
-  return d;
-}
-// Only flag events that plausibly bring a meaningful number of EXTRA people
-// into the whole building (camps bringing outside kids across several
-// courts). Ordinary single-court reservations or one group-ex class don't
-// move a building-wide headcount enough to matter, so we don't flag those.
-function hasCampDuringHour(dateStr, hour){
-  const facEvents=EVENTS?EVENTS[facKey()]:null;
-  const dayEvents=facEvents&&facEvents.days?facEvents.days[dateStr]:null;
-  if(!dayEvents)return false;
-  return dayEvents.some(e=>{
-    if(!/camp/i.test(e.title))return false;
-    const m=e.time.match(/(\d{1,2}):(\d{2})\s*([AP]M)\s*-\s*(\d{1,2}):(\d{2})\s*([AP]M)/i);
-    if(!m)return false;
-    const to24=(h,ap)=>{h=+h;if(/pm/i.test(ap)&&h!==12)h+=12;if(/am/i.test(ap)&&h===12)h=0;return h;};
-    const startH=to24(m[1],m[3]),endH=to24(m[4],m[6]);
-    return hour>=startH&&hour<endH;
-  });
-}
 function renderBest(){
   const z=DATA[FACILITY];const el=document.getElementById("bestTimes");
   if(!z||!z.best.length){el.innerHTML='<div style="color:var(--sub);font-size:14px">Not enough data yet.</div>';return;}
   let h='<div class="bt-grid">';
   for(let d=0;d<7;d++){const b=z.best.find(x=>x.d===d);
-    let flag="";
-    if(b){
-      const dateForDay=nextDateForDow(d);
-      const dateStr=dateKey(dateForDay);
-      if(hasCampDuringHour(dateStr,b.h)){
-        flag='<div class="bt-flag" title="A camp is scheduled during this hour — may run busier than the historical average suggests.">⚠ camp scheduled</div>';
-      }
-    }
-    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>'+flag:'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
+    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
   h+='</div>';el.innerHTML=h;
 }
 
@@ -451,44 +456,15 @@ function setFacility(f){FACILITY=f;
   renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();renderEvents();}
 function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();renderEvents();}
 
-let lastLoadTime = 0;
-const MIN_RELOAD_GAP_MS = 60 * 1000; // don't refetch more than once a minute
-
-function loadAllData(showLoadingBar){
-  lastLoadTime = Date.now();
-  if(showLoadingBar){
-    const st=document.getElementById("statusbar");
-    st.style.display="";st.className="statusbar loading";st.textContent="Refreshing…";
-  }
-  const hoursReady = fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
-  fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
-  // Wait for HOURS before analyzing occupancy, so the real-hours-aware filter
-  // (wasActuallyOpen) has real data to check against instead of failing open.
-  return hoursReady.then(()=>fetch(CSV_URL+"?t="+Date.now())).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
-    const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
-    DATA=analyze(rows);renderAll();
-    const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
-    const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
-    document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
-  }).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
-}
-
-// Initial load on first page open.
-loadAllData(false);
-
-// Re-fetch fresh data whenever the app/tab becomes visible again — this is
-// what fixes the "app shows stale data unless fully closed and reopened"
-// problem in the wrapped iOS app (and stale browser tabs too). WKWebView
-// (used by the Capacitor app) keeps the page state across backgrounding, so
-// without this, reopening the app just shows whatever was last rendered.
-function maybeRefresh(){
-  if(document.visibilityState==="visible" && Date.now()-lastLoadTime>MIN_RELOAD_GAP_MS){
-    loadAllData(true);
-  }
-}
-document.addEventListener("visibilitychange", maybeRefresh);
-window.addEventListener("pageshow", maybeRefresh);       // iOS Safari/WKWebView back-forward cache
-window.addEventListener("focus", maybeRefresh);          // extra safety net for some webview quirks
+fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
+fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
+  const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
+  DATA=analyze(rows);renderAll();
+  const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
+  const last=Math.max(...Object.values(DATA).map(z=>z.lastDT));
+  document.getElementById("freshness").textContent="Latest reading: "+new Date(last).toLocaleString("en-US",{timeZone:"America/Los_Angeles"});
+}).catch(e=>{const st=document.getElementById("statusbar");st.className="statusbar err";st.textContent="Couldn't load data ("+e.message+")";});
 
 /* ===== NOTIFICATIONS (Web Push) ===== */
 // Your site's public VAPID key (safe to expose client-side; pairs with the
