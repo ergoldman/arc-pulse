@@ -263,25 +263,58 @@ function estimateOccupancyAt(batches, targetTimeMs){
   return total;
 }
 
+// --- Practical-peak normalization -----------------------------------
+// The official capacity (2500 for ARC) is a theoretical fire-code number,
+// not a realistic ceiling -- real usage rarely gets close to it, so every
+// "% full" reading looks artificially small. Instead, we normalize against
+// the ROLLING 97th-percentile of actual estimated occupancy over the last
+// 30 days -- a realistic "typical peak" that adapts over time (e.g. once
+// fall semester brings more traffic, this ceiling rises with it), while
+// being robust to one-off spikes or bad readings (a stuck sensor, etc).
+const PEAK_WINDOW_DAYS = 30;
+const PEAK_PERCENTILE = 0.97;
+
+function percentile(sortedArr, p){
+  if(!sortedArr.length)return 0;
+  const idx=Math.min(sortedArr.length-1, Math.floor(p*sortedArr.length));
+  return sortedArr[idx];
+}
+
 function analyze(rows){
   const zones={};rows.forEach(r=>{(zones[r.name]=zones[r.name]||[]).push(r);});
   const out={};
   for(const [name,rs] of Object.entries(zones)){
     rs.sort((a,b)=>a.dt-b.dt);const max=rs[rs.length-1].max;
     // Build the arrival-batch decay model once per facility, then compute
-    // an ESTIMATED pct for every reading. This feeds the historical
-    // averages (heatmap/best-times/forecast) -- the raw pct stays visible
-    // separately on the live board, nothing is hidden, patterns just
-    // aren't built from the raw (sporadically-decreasing) number anymore.
+    // an ESTIMATED count/pct for every reading.
     const batches=extractArrivalBatches(rs);
     rs.forEach(r=>{
-      const est=estimateOccupancyAt(batches, r.dt.getTime());
-      r.estPct = Math.min(100, (est/max)*100);
+      r.estCount = estimateOccupancyAt(batches, r.dt.getTime());
+      r.estPct = Math.min(100, (r.estCount/max)*100);
+    });
+    // Practical-peak normalization: for each reading, find the 97th
+    // percentile of ESTIMATED counts from the trailing 30 days (not the
+    // whole dataset, and not the official capacity), and express that
+    // reading as a % of THAT realistic ceiling instead of the theoretical
+    // 2500. Computed per-reading so it's a genuinely rolling window, not
+    // a single fixed number for the whole dataset.
+    const windowMs=PEAK_WINDOW_DAYS*24*60*60*1000;
+    rs.forEach((r,i)=>{
+      const windowStart=r.dt.getTime()-windowMs;
+      const windowCounts=[];
+      for(let j=i;j>=0;j--){
+        if(rs[j].dt.getTime()<windowStart)break; // sorted ascending, so once we're out of window, stop
+        windowCounts.push(rs[j].estCount);
+      }
+      windowCounts.sort((a,b)=>a-b);
+      const peak=Math.max(percentile(windowCounts, PEAK_PERCENTILE), 1); // avoid divide-by-zero
+      r.peakCount=peak;
+      r.normPct=Math.min(100, (r.estCount/peak)*100);
     });
     const cell={},hourly={};
-    rs.filter(r=>isOpenHour(r.dow,r.hour)&&r.estPct>0).forEach(r=>{
-      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.estPct);
-      (hourly[r.hour]=hourly[r.hour]||[]).push(r.estPct);});
+    rs.filter(r=>isOpenHour(r.dow,r.hour)&&r.normPct>0).forEach(r=>{
+      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.normPct);
+      (hourly[r.hour]=hourly[r.hour]||[]).push(r.normPct);});
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
     const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
     const latest=rs[rs.length-1];
@@ -289,12 +322,12 @@ function analyze(rows){
     const hasHistory=slotRaw&&slotRaw.length>0;
     const normal=hasHistory?avg(slotRaw):null;
     const sd=hasHistory&&slotRaw.length>1?std(slotRaw):1;
-    const z=(hasHistory&&sd)?(latest.estPct-normal)/sd:0;
+    const z=(hasHistory&&sd)?(latest.normPct-normal)/sd:0;
     const verdict=!hasHistory?"Not enough data yet":z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
     const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
     const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
     const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
-    out[name]={max,now:{cur:latest.cur,pct:latest.pct,estPct:latest.estPct,hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
+    out[name]={max,now:{cur:latest.cur,pct:latest.pct,estPct:latest.estPct,normPct:latest.normPct,estCount:Math.round(latest.estCount),peakCount:Math.round(latest.peakCount),hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
   }
   return out;
 }
@@ -309,15 +342,14 @@ function renderBoard(){
   const n=z.now;
   const tcbg=n.verdict.includes("Quiet")?"var(--calmbg)":n.verdict.includes("Busier")?"var(--hotbg)":n.verdict.includes("Not enough")?"var(--modbg)":"var(--modbg)";
   const tccol=n.verdict.includes("Quiet")?"var(--calm)":n.verdict.includes("Busier")?"var(--hot)":"#96700e";
-  const estCount=Math.round((n.estPct/100)*z.max);
   const cntLine=n.normal!=null
-    ? '~'+estCount.toLocaleString()+' of '+z.max.toLocaleString()+' people (estimated) · usually ~'+Math.round(n.normal)+'%'
-    : '~'+estCount.toLocaleString()+' of '+z.max.toLocaleString()+' people (estimated) · no history yet for this day &amp; time';
-  el.innerHTML='<div class="board">'+ring(n.estPct)+
+    ? '~'+n.estCount.toLocaleString()+' people (estimated) · usually ~'+Math.round(n.normal)+'%'
+    : '~'+n.estCount.toLocaleString()+' people (estimated) · no history yet for this day &amp; time';
+  el.innerHTML='<div class="board">'+ring(n.normPct)+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<span class="cnt">'+cntLine+'</span>'+
     '<div class="when">'+DOWFULL[n.dow]+' · '+fmtH(n.hour)+' now</div>'+
-    '<div class="official" style="font-size:11px;color:var(--sub);margin-top:6px">Official source count: '+n.cur.toLocaleString()+' ('+Math.round(n.pct)+'%) — our estimate adjusts for people who\'ve likely left since the source last recorded a decrease</div>'+
+    '<div class="official" style="font-size:11px;color:var(--sub);margin-top:6px">% shown is relative to the typical recent peak (~'+n.peakCount.toLocaleString()+' people, last 30 days) — not official building capacity ('+z.max.toLocaleString()+'). Official source count right now: '+n.cur.toLocaleString()+' ('+Math.round(n.pct)+'% of capacity).</div>'+
     '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
 
