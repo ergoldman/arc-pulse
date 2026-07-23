@@ -71,6 +71,9 @@
   .hours-pill .st{font-weight:700;font-size:13px}
   .hours-pill .st.open{color:var(--calm)}.hours-pill .st.closed{color:var(--hot)}
   .hours-warn{margin-top:10px;border-left:3px solid var(--gold);background:var(--modbg);padding:9px 13px;font-size:13px;color:#8a6410;border-radius:0 8px 8px 0}
+  .event-now-banner{border-left:3px solid var(--hot,#d6373a);background:var(--hotbg,#fdecec);padding:11px 14px;border-radius:0 8px 8px 0;margin-bottom:16px}
+  .event-now-banner .label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--hot,#d6373a);margin-bottom:3px}
+  .event-now-banner .items{font-size:13.5px;color:#7a2a2a;line-height:1.5}
   .hours-warn.closing{border-left-color:var(--hot);background:var(--hotbg);color:var(--hot)}
 
   .fc-wrap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
@@ -170,6 +173,7 @@
 </div>
 <main class="wrap">
   <div id="hoursBanner" style="margin:20px 0"></div>
+  <div id="importantEventsBanner"></div>
   <section><div class="eyebrow">Right now</div><div id="board"></div>
     <div style="font-size:12px;color:var(--sub);line-height:1.5;margin-top:10px;padding:10px 12px;background:var(--surface-1,#f7f8fa);border-radius:8px">
       <b>How the estimate works:</b> every time the official count goes up, that's a real arrival. We assume each person's visit length varies — most stay around an hour, some leave sooner, some later — so instead of waiting for the source to report an exit, we gradually "fade out" each arrival over time based on how long visits typically last. The % you see is that estimated number of people still likely present, divided by the highest we've realistically seen recently (not the building's official max capacity).
@@ -214,10 +218,50 @@ function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);const head=lines[0].split(",");
   return lines.slice(1).map(l=>{const p=l.split(",");const o={};head.forEach((h,i)=>o[h]=p[i]);
     const dtUTC=new Date(o.timestamp+"Z");const pac=new Date(dtUTC.toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
-    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC};
+    return {name:o.facility_name,cur:+o.current,max:+o.maximum,pct:+o.pct_full,hour:pac.getHours(),dow:(pac.getDay()+6)%7,dt:dtUTC,pacDate:pac};
   }).filter(r=>r.name&&!isNaN(r.pct)&&r.name!=="Rock Wall");
 }
-function isOpenHour(dow,hour){return dow>=5?(hour>=8&&hour<=23):(hour>=5&&hour<=23);}
+// Real hours-aware checking (not a generic weekday/weekend guess) -- pulls
+// from HOURS (special dates, summer/regular season, per-facility) so we
+// respect actual published open/close times, not an approximation.
+const NAME_TO_HOURSKEY={"ARC Access":"arc","Recreation Pool":"pool"};
+function hoursForDayGeneric(hoursKey, d){
+  if(!HOURS)return null;
+  const set=HOURS[hoursKey];
+  if(!set)return null;
+  const key=dateKey(d);
+  if(set.special&&set.special[key])return set.special[key];
+  const weekend=(d.getDay()===0||d.getDay()===6);
+  const season=isSummer(d)?set.summer:set.regular;
+  if(weekend)return season.weekend;
+  if(d.getDay()===5 && season.friday) return season.friday;
+  return season.weekday;
+}
+function wasActuallyOpen(row){
+  const hoursKey=NAME_TO_HOURSKEY[row.name];
+  if(!hoursKey)return true;
+  const today=hoursForDayGeneric(hoursKey, row.pacDate);
+  if(!today)return true; // hours not loaded yet -- fail open rather than dropping everything
+  if(today.closed)return false;
+  const openM=+today.open.split(":")[0]*60+ +today.open.split(":")[1];
+  let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];
+  if(today.close==="24:00")closeM=1440;
+  const rowM=row.hour*60;
+  return rowM>=openM && rowM<closeM;
+}
+// Returns the closing time (as minutes-since-midnight, and a Date at that
+// exact moment) for a given facility on a given day -- used to force the
+// decay model to zero once the building has actually closed, since nobody
+// can physically still be inside after that point.
+function closingMomentFor(hoursKey, d){
+  const today=hoursForDayGeneric(hoursKey, d);
+  if(!today || today.closed) return null;
+  let closeM=+today.close.split(":")[0]*60+ +today.close.split(":")[1];
+  if(today.close==="24:00")closeM=1440;
+  const closeDT=new Date(d);closeDT.setHours(0,0,0,0);
+  closeDT.setMinutes(closeM);
+  return closeDT;
+}
 
 // --- Exit-decay estimation model ---------------------------------------
 // The raw source count only decreases sporadically (confirmed against real
@@ -255,7 +299,22 @@ function extractArrivalBatches(sortedRows){
 // Estimate occupancy at a given point in time by summing the still-present
 // fraction of every recent arrival batch (survival-decayed), rather than
 // trusting the raw count's sporadic decreases.
-function estimateOccupancyAt(batches, targetTimeMs){
+//
+// IMPORTANT: this respects actual building hours as a HARD rule, not just
+// a soft probability. The Weibull decay alone has no concept of closing
+// time -- left unchecked, it would keep predicting a few lingering people
+// past close, which is physically impossible once the doors are locked.
+// So: once we're at or past the real closing moment for that facility/day,
+// the estimate is forced to exactly 0, overriding whatever the curve says.
+// After a fresh opening, the estimate naturally starts back at 0 too,
+// since there are no recent arrival batches yet at that point.
+function estimateOccupancyAt(batches, targetTimeMs, hoursKey, targetDate){
+  if(hoursKey && targetDate){
+    const closeDT=closingMomentFor(hoursKey, targetDate);
+    if(closeDT && targetTimeMs>=closeDT.getTime()){
+      return 0; // hard stop: building is closed, nobody can still be inside
+    }
+  }
   let total=0;
   const lookbackMs=DWELL_LOOKBACK_MIN*60000;
   for(let i=batches.length-1;i>=0;i--){
@@ -292,8 +351,9 @@ function analyze(rows){
     // Build the arrival-batch decay model once per facility, then compute
     // an ESTIMATED count/pct for every reading.
     const batches=extractArrivalBatches(rs);
+    const hoursKey=NAME_TO_HOURSKEY[name];
     rs.forEach(r=>{
-      r.estCount = estimateOccupancyAt(batches, r.dt.getTime());
+      r.estCount = estimateOccupancyAt(batches, r.dt.getTime(), hoursKey, r.pacDate);
       r.estPct = Math.min(100, (r.estCount/max)*100);
     });
     // Practical-peak normalization: for each reading, find the 97th
@@ -316,7 +376,7 @@ function analyze(rows){
       r.normPct=Math.min(100, (r.estCount/peak)*100);
     });
     const cell={},hourly={};
-    rs.filter(r=>isOpenHour(r.dow,r.hour)&&r.normPct>0).forEach(r=>{
+    rs.filter(r=>wasActuallyOpen(r)&&r.normPct>0).forEach(r=>{
       (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.normPct);
       (hourly[r.hour]=hourly[r.hour]||[]).push(r.normPct);});
     const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
@@ -463,16 +523,44 @@ function calStep(n){calMonth+=n;if(calMonth<0){calMonth=11;calYear--;}if(calMont
 function renderEvents(){
   const sec=document.getElementById("sec-events"),el=document.getElementById("events"),heading=document.getElementById("eventsHeading");
   const facEvents=EVENTS?EVENTS[facKey()]:null;
-  if(!facEvents||!facEvents.days){sec.classList.add("hidden");return;}
+  if(!facEvents||!facEvents.days){sec.classList.add("hidden");renderImportantEventsBanner([],pacificNow());return;}
   const now=pacificNow();const key=dateKey(now);
   const today=facEvents.days[key];
-  if(!today||!today.length){sec.classList.add("hidden");return;}
+  if(!today||!today.length){sec.classList.add("hidden");renderImportantEventsBanner([],now);return;}
   sec.classList.remove("hidden");
   const label=FACILITY==="Recreation Pool"?"Pool":"ARC";
   heading.textContent="Today at the "+label+" — classes & reservations";
   let h='<div class="ev-list">';
   today.forEach(e=>{h+='<div class="ev-item"><div class="ev-time">'+e.time+'</div><div class="ev-body"><div class="title">'+e.title+'</div>'+(e.loc?'<div class="loc">'+e.loc+'</div>':'')+'</div></div>';});
   h+='</div>';el.innerHTML=h;
+  renderImportantEventsBanner(today, now);
+}
+// Events that plausibly bring a MEANINGFUL number of extra people into the
+// whole building -- camps (outside kids across several courts), dance team
+// practice, and scheduled classes/sessions. Explicitly excludes routine
+// single-court reservations and housekeeping, which don't move a
+// building-wide headcount (same reasoning as the historical effect-analysis
+// discussion earlier: those happen constantly and aren't differentiating).
+const IMPORTANT_EVENT_RE = /camp|dance team|summer session|group exercise/i;
+function parseEventTimeRange(t){
+  const m=t.match(/(\d{1,2}):(\d{2})\s*([AP]M)\s*-\s*(\d{1,2}):(\d{2})\s*([AP]M)/i);
+  if(!m)return null;
+  const to24=(h,ap)=>{h=+h;if(/pm/i.test(ap)&&h!==12)h+=12;if(/am/i.test(ap)&&h===12)h=0;return h;};
+  return {startH:to24(m[1],m[3]),startM:+m[2],endH:to24(m[4],m[6]),endM:+m[5]};
+}
+function renderImportantEventsBanner(todayEvents, now){
+  const banner=document.getElementById("importantEventsBanner");
+  if(!banner)return;
+  const nowMin=now.getHours()*60+now.getMinutes();
+  const active=todayEvents.filter(e=>{
+    if(!IMPORTANT_EVENT_RE.test(e.title))return false;
+    const r=parseEventTimeRange(e.time);if(!r)return false;
+    const startMin=r.startH*60+r.startM, endMin=r.endH*60+r.endM;
+    return nowMin>=startMin && nowMin<endMin;
+  });
+  if(!active.length){banner.innerHTML='';return;}
+  const items=active.map(e=>'<b>'+e.title+'</b>'+(e.loc?' ('+e.loc+')':'')+' — '+e.time).join('<br>');
+  banner.innerHTML='<div class="event-now-banner"><div class="label">Happening now</div><div class="items">'+items+'</div></div>';
 }
 function setFacility(f){FACILITY=f;
   document.getElementById("tab-arc").classList.toggle("on",f==="ARC Access");
@@ -481,9 +569,9 @@ function setFacility(f){FACILITY=f;
   renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();renderEvents();}
 function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();renderEvents();}
 
-fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
+const hoursReady = fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
 fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
-fetch(CSV_URL+"?t="+Date.now()).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
+hoursReady.then(()=>fetch(CSV_URL+"?t="+Date.now())).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();}).then(text=>{
   const rows=parseCSV(text);if(!rows.length)throw new Error("No data yet");
   DATA=analyze(rows);renderAll();
   const st=document.getElementById("statusbar");st.className="statusbar ok";st.textContent="Live · "+rows.length+" readings";setTimeout(()=>st.style.display="none",2200);
