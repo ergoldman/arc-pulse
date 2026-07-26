@@ -186,7 +186,7 @@
       <span class="hl-swatch" style="background:#e3f2ea"></span><span class="hl-swatch" style="background:#bfe3cf"></span>
       <span class="hl-swatch" style="background:#fbe6a8"></span><span class="hl-swatch" style="background:#f3b371"></span>
       <span class="hl-swatch" style="background:#d6373a"></span><span>Busier</span>
-      <span class="hl-note">· % full · blank = no data yet</span></div>
+      <span class="hl-note">· estimated people · blank = no data yet</span></div>
   </section>
   <section id="sec-events" class="hidden"><div class="eyebrow" id="eventsHeading">Today — classes &amp; reservations</div><div id="events"></div></section>
   <section><div class="eyebrow">Hours calendar</div><div id="calendar"></div></section>
@@ -202,7 +202,7 @@ const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const DOWFULL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const MONTHNAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHABBR=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const fmtH=h=>{const ap=h<12?"a":"p";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
+const fmtH=h=>{const ap=h<12?"am":"pm";let hr=h%12;if(hr===0)hr=12;return hr+ap;};
 // Sequential, perceptually-ordered heat scale: pale green (quiet) -> gold -> orange -> red (packed)
 const HEATCOLOR=p=>p<8?"#e3f2ea":p<20?"#bfe3cf":p<35?"#fbe6a8":p<55?"#f3b371":"#d6373a";
 const LOADCOLOR=p=>p<25?"#12946b":p<50?"#d99a17":p<75?"#e0692f":"#d6373a";
@@ -276,7 +276,7 @@ function closingMomentFor(hoursKey, d){
 // Tuned so the typical stay is ~70 minutes, with realistic spread (some
 // people 30min, some 2+ hours). These two constants are the only tuning
 // knobs -- adjust DWELL_SCALE_MIN to shift the typical stay length.
-const DWELL_SCALE_MIN = 68;   // Weibull scale parameter (minutes) -- tuned for ~60min typical stay
+const DWELL_SCALE_MIN = 79;   // Weibull scale parameter (minutes) -- tuned for ~70min typical stay
 const DWELL_SHAPE_K = 2;      // Weibull shape parameter (peakedness)
 const DWELL_LOOKBACK_MIN = 240; // ignore arrival batches older than this (negligible survival probability by then)
 
@@ -361,7 +361,10 @@ function analyze(rows){
     // whole dataset, and not the official capacity), and express that
     // reading as a % of THAT realistic ceiling instead of the theoretical
     // 2500. Computed per-reading so it's a genuinely rolling window, not
-    // a single fixed number for the whole dataset.
+    // a single fixed number for the whole dataset. This % still drives
+    // visuals (ring fill, heatmap color) but is never printed as text --
+    // all displayed numbers are estimated PEOPLE COUNTS instead, since a
+    // percentage of an abstract rolling baseline isn't intuitive to read.
     const windowMs=PEAK_WINDOW_DAYS*24*60*60*1000;
     rs.forEach((r,i)=>{
       const windowStart=r.dt.getTime()-windowMs;
@@ -375,30 +378,35 @@ function analyze(rows){
       r.peakCount=peak;
       r.normPct=Math.min(100, (r.estCount/peak)*100);
     });
+    // cell/hourly store {pct, count} pairs: pct drives z-score/color math,
+    // count is what actually gets displayed as text everywhere.
     const cell={},hourly={};
     rs.filter(r=>wasActuallyOpen(r)&&r.normPct>0).forEach(r=>{
-      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(r.normPct);
-      (hourly[r.hour]=hourly[r.hour]||[]).push(r.normPct);});
-    const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-    const std=a=>{if(a.length<2)return 0;const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)));};
+      const entry={pct:r.normPct,count:r.estCount};
+      (cell[r.dow+"-"+r.hour]=cell[r.dow+"-"+r.hour]||[]).push(entry);
+      (hourly[r.hour]=hourly[r.hour]||[]).push(entry);});
+    const avgPct=a=>a.reduce((x,y)=>x+y.pct,0)/a.length;
+    const avgCount=a=>a.reduce((x,y)=>x+y.count,0)/a.length;
+    const stdPct=a=>{if(a.length<2)return 0;const m=avgPct(a);return Math.sqrt(a.reduce((x,y)=>x+(y.pct-m)**2,0)/a.length);};
     const latest=rs[rs.length-1];
     const slotRaw=cell[latest.dow+"-"+latest.hour];
     const hasHistory=slotRaw&&slotRaw.length>0;
-    const normal=hasHistory?avg(slotRaw):null;
-    const sd=hasHistory&&slotRaw.length>1?std(slotRaw):1;
-    const z=(hasHistory&&sd)?(latest.normPct-normal)/sd:0;
+    const normalPct=hasHistory?avgPct(slotRaw):null;
+    const normalCount=hasHistory?avgCount(slotRaw):null;
+    const sd=hasHistory&&slotRaw.length>1?stdPct(slotRaw):1;
+    const z=(hasHistory&&sd)?(latest.normPct-normalPct)/sd:0;
     const verdict=!hasHistory?"Not enough data yet":z<-0.6?"Quieter than usual":z>0.6?"Busier than usual":"About normal";
-    const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avg(c)});}
-    const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avg(c)});}}
-    const best=[];for(let d=0;d<7;d++){let bh=null,bp=999;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avg(c);if(p<bp){bp=p;bh=h;}}}if(bh!==null)best.push({d,h:bh,pct:bp});}
-    out[name]={max,now:{cur:latest.cur,pct:latest.pct,estPct:latest.estPct,normPct:latest.normPct,estCount:Math.round(latest.estCount),peakCount:Math.round(latest.peakCount),hour:latest.hour,dow:latest.dow,normal,verdict},heat,forecast:fc,best,lastDT:latest.dt};
+    const heat=[];for(let d=0;d<7;d++)for(let h=6;h<24;h++){const c=cell[d+"-"+h];if(c)heat.push({d,h,pct:avgPct(c),count:avgCount(c)});}
+    const fc=[];for(let h=latest.hour;h<24;h++){const c=cell[latest.dow+"-"+h];if(c){fc.push({h,pct:avgPct(c),count:avgCount(c)});}}
+    const best=[];for(let d=0;d<7;d++){let bh=null,bp=999,bc=0;for(let h=7;h<=20;h++){const c=cell[d+"-"+h];if(c){const p=avgPct(c);if(p<bp){bp=p;bh=h;bc=avgCount(c);}}}if(bh!==null)best.push({d,h:bh,pct:bp,count:bc});}
+    out[name]={max,now:{cur:latest.cur,pct:latest.pct,estPct:latest.estPct,normPct:latest.normPct,estCount:Math.round(latest.estCount),peakCount:Math.round(latest.peakCount),hour:latest.hour,dow:latest.dow,normal:normalCount,verdict},heat,forecast:fc,best,lastDT:latest.dt};
   }
   return out;
 }
 
-function ring(pct){
+function ring(pct, displayCount){
   const r=50,c=2*Math.PI*r,off=c*(1-pct/100);const col=LOADCOLOR(pct);
-  return '<div class="ring"><svg width="118" height="118"><circle cx="59" cy="59" r="'+r+'" fill="none" stroke="#eef1f5" stroke-width="9"/><circle cx="59" cy="59" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="9" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" stroke-linecap="round"/></svg><div class="mid"><span class="pct">'+Math.round(pct)+'%</span><span class="cap">full</span></div></div>';
+  return '<div class="ring"><svg width="118" height="118"><circle cx="59" cy="59" r="'+r+'" fill="none" stroke="#eef1f5" stroke-width="9"/><circle cx="59" cy="59" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="9" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" stroke-linecap="round"/></svg><div class="mid"><span class="pct">~'+Math.round(displayCount).toLocaleString()+'</span><span class="cap">people</span></div></div>';
 }
 function renderBoard(){
   const z=DATA[FACILITY];const el=document.getElementById("board");
@@ -407,13 +415,12 @@ function renderBoard(){
   const tcbg=n.verdict.includes("Quiet")?"var(--calmbg)":n.verdict.includes("Busier")?"var(--hotbg)":n.verdict.includes("Not enough")?"var(--modbg)":"var(--modbg)";
   const tccol=n.verdict.includes("Quiet")?"var(--calm)":n.verdict.includes("Busier")?"var(--hot)":"#96700e";
   const cntLine=n.normal!=null
-    ? '~'+n.estCount.toLocaleString()+' people (estimated) · usually ~'+Math.round(n.normal)+'%'
-    : '~'+n.estCount.toLocaleString()+' people (estimated) · no history yet for this day &amp; time';
-  el.innerHTML='<div class="board">'+ring(n.normPct)+
+    ? 'usually ~'+Math.round(n.normal).toLocaleString()+' people at this time'
+    : 'no history yet for this day &amp; time';
+  el.innerHTML='<div class="board">'+ring(n.normPct, n.estCount)+
     '<div class="meta"><div class="verdict">'+n.verdict+'</div>'+
     '<span class="cnt">'+cntLine+'</span>'+
     '<div class="when">'+DOWFULL[n.dow]+' · '+fmtH(n.hour)+' now</div>'+
-    '<div class="official" style="font-size:11px;color:var(--sub);margin-top:6px">% shown is relative to the typical recent peak (~'+n.peakCount.toLocaleString()+' people, last 30 days)</div>'+
     '<span class="tag" style="background:'+tcbg+';color:'+tccol+'">'+n.verdict+'</span></div></div>';
 }
 
@@ -424,19 +431,19 @@ function renderForecast(){
   const plotW=W-padL-padR,plotH=H-padT-padB;
   const hmin=fc[0].h,hmax=fc[fc.length-1].h;
   const x=h=>padL+(hmax===hmin?0:(h-hmin)/(hmax-hmin))*plotW;
-  const y=p=>padT+(1-p/100)*plotH;
+  const y=p=>padT+(1-p/100)*plotH; // still plots by pct internally (shape of the curve), just never prints it
   let line="";fc.forEach((f,i)=>{line+=(i===0?"M":"L")+x(f.h)+" "+y(f.pct)+" ";});
   const area=line+"L"+x(fc[fc.length-1].h)+" "+y(0)+" L"+x(fc[0].h)+" "+y(0)+" Z";
-  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#e5e9f0" stroke-width="1"/><text x="'+(padL-6)+'" y="'+(y(g)+3)+'" text-anchor="end" font-family="IBM Plex Mono" font-size="9" fill="#6b7280">'+g+'</text>';});
+  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#e5e9f0" stroke-width="1"/>';});
   let dots="",xlab="";
-  fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="4.5" fill="'+LOADCOLOR(f.pct)+'" stroke="#ffffff" stroke-width="1.5" data-h="'+f.h+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
+  fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="4.5" fill="'+LOADCOLOR(f.pct)+'" stroke="#ffffff" stroke-width="1.5" data-h="'+f.h+'" data-c="'+Math.round(f.count)+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
     if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-8)+'" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#6b7280">'+fmtH(f.h)+'</text>';});
   const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(20,73,168,0.08)"/><path d="'+line+'" fill="none" stroke="#1449a8" stroke-width="2.5"/>'+dots+xlab+'</svg>';
-  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted % full · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted crowd level · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
   el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
-    const h=+d.dataset.h,p=+d.dataset.p,ppl=Math.round(z.now.peakCount*p/100);
+    const h=+d.dataset.h,ppl=+d.dataset.c,p=+d.dataset.p;
     const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
-    document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+p+'% of typical peak · ~'+ppl.toLocaleString()+' people · <b>'+lbl+'</b>';}));
+    document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+ppl.toLocaleString()+' people · <b>'+lbl+'</b>';}));
 }
 
 function renderBest(){
@@ -444,17 +451,17 @@ function renderBest(){
   if(!z||!z.best.length){el.innerHTML='<div style="color:var(--sub);font-size:14px">Not enough data yet.</div>';return;}
   let h='<div class="bt-grid">';
   for(let d=0;d<7;d++){const b=z.best.find(x=>x.d===d);
-    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.pct)+'% full</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
+    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.count)+' people</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
   h+='</div>';el.innerHTML=h;
 }
 
 function renderHeat(){
   const z=DATA[FACILITY];if(!z){document.getElementById("heat").innerHTML="";return;}
-  const lk={};z.heat.forEach(c=>lk[c.d+"-"+c.h]=c.pct);
+  const lk={},lkCount={};z.heat.forEach(c=>{lk[c.d+"-"+c.h]=c.pct;lkCount[c.d+"-"+c.h]=c.count;});
   let h='<table class="heat"><tr><th></th>';for(let hr=6;hr<24;hr++)h+='<th>'+fmtH(hr)+'</th>';h+='</tr>';
   for(let d=0;d<7;d++){h+='<tr><th style="text-align:right;padding-right:8px">'+DOW[d]+'</th>';
-    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const c=p==null?"#eef1f5":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#111827");
-      h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':Math.round(p)+'%')+'">'+(p==null?'':Math.round(p))+'</td>';}h+='</tr>';}
+    for(let hr=6;hr<24;hr++){const p=lk[d+"-"+hr];const cnt=lkCount[d+"-"+hr];const c=p==null?"#eef1f5":HEATCOLOR(p);const t=p==null?"":(p>=35?"#fff":"#111827");
+      h+='<td style="background:'+c+';color:'+t+'" title="'+DOW[d]+' '+fmtH(hr)+': '+(p==null?'no data':'~'+Math.round(cnt)+' people')+'">'+(p==null?'':Math.round(cnt))+'</td>';}h+='</tr>';}
   h+='</table>';document.getElementById("heat").innerHTML=h;
 }
 
