@@ -180,7 +180,6 @@
     </div>
   </section>
   <section id="sec-forecast"><div class="eyebrow">Today's forecast</div><div id="forecast"></div></section>
-  <section id="sec-best"><div class="eyebrow">Best time to go — each day</div><div id="bestTimes"></div></section>
   <section><div class="eyebrow">Typical week</div><div class="heatwrap"><div id="heat"></div></div>
     <div class="heat-legend"><span>Quieter</span>
       <span class="hl-swatch" style="background:#e3f2ea"></span><span class="hl-swatch" style="background:#bfe3cf"></span>
@@ -446,15 +445,6 @@ function renderForecast(){
     document.getElementById('fcTip').innerHTML='<b>'+fmtH(h)+'</b> · ~'+ppl.toLocaleString()+' people · <b>'+lbl+'</b>';}));
 }
 
-function renderBest(){
-  const z=DATA[FACILITY];const el=document.getElementById("bestTimes");
-  if(!z||!z.best.length){el.innerHTML='<div style="color:var(--sub);font-size:14px">Not enough data yet.</div>';return;}
-  let h='<div class="bt-grid">';
-  for(let d=0;d<7;d++){const b=z.best.find(x=>x.d===d);
-    h+='<div class="bt-day"><div class="d">'+DOW[d]+'</div>'+(b?'<div class="time">'+fmtH(b.h)+'</div><div class="pct">~'+Math.round(b.count)+' people</div>':'<div class="time">—</div><div class="pct">no data</div>')+'</div>';}
-  h+='</div>';el.innerHTML=h;
-}
-
 function renderHeat(){
   const z=DATA[FACILITY];if(!z){document.getElementById("heat").innerHTML="";return;}
   const lk={},lkCount={};z.heat.forEach(c=>{lk[c.d+"-"+c.h]=c.pct;lkCount[c.d+"-"+c.h]=c.count;});
@@ -573,8 +563,8 @@ function setFacility(f){FACILITY=f;
   document.getElementById("tab-arc").classList.toggle("on",f==="ARC Access");
   document.getElementById("tab-pool").classList.toggle("on",f==="Recreation Pool");
   calMonth=null;calYear=null; // reset calendar to current month on facility switch
-  renderBoard();renderForecast();renderBest();renderHeat();renderHours();renderCalendar();renderEvents();}
-function renderAll(){renderHours();renderBoard();renderForecast();renderBest();renderHeat();renderCalendar();renderEvents();}
+  renderBoard();renderForecast();renderHeat();renderHours();renderCalendar();renderEvents();}
+function renderAll(){renderHours();renderBoard();renderForecast();renderHeat();renderCalendar();renderEvents();}
 
 const hoursReady = fetch(HOURS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(H=>{if(H){HOURS=H;renderHours();renderCalendar();}}).catch(()=>{});
 fetch(EVENTS_URL+"?t="+Date.now()).then(r=>r.ok?r.json():null).then(E=>{if(E){EVENTS=E;renderEvents();}}).catch(()=>{});
