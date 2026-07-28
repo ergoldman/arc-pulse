@@ -426,19 +426,22 @@ function renderBoard(){
 function renderForecast(){
   const z=DATA[FACILITY];const el=document.getElementById("forecast");
   if(!z||z.forecast.length<2){el.innerHTML='<div class="fc-wrap">Not enough data yet — fills in as readings accumulate.</div>';return;}
-  const fc=z.forecast;const W=680,H=190,padL=34,padR=14,padB=26,padT=10;
+  const fc=z.forecast;const W=680,H=190,padL=46,padR=14,padB=26,padT=10;
   const plotW=W-padL-padR,plotH=H-padT-padB;
   const hmin=fc[0].h,hmax=fc[fc.length-1].h;
   const x=h=>padL+(hmax===hmin?0:(h-hmin)/(hmax-hmin))*plotW;
-  const y=p=>padT+(1-p/100)*plotH; // still plots by pct internally (shape of the curve), just never prints it
+  const y=p=>padT+(1-p/100)*plotH; // still plots by pct internally (shape of the curve), just never prints raw % -- axis labels below convert to people
   let line="";fc.forEach((f,i)=>{line+=(i===0?"M":"L")+x(f.h)+" "+y(f.pct)+" ";});
   const area=line+"L"+x(fc[fc.length-1].h)+" "+y(0)+" L"+x(fc[0].h)+" "+y(0)+" Z";
-  let grid="";[0,25,50,75,100].forEach(g=>{grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#e5e9f0" stroke-width="1"/>';});
+  let grid="";[0,25,50,75,100].forEach(g=>{
+    const pplLabel=Math.round(z.now.peakCount*g/100);
+    grid+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#e5e9f0" stroke-width="1"/>';
+    grid+='<text x="'+(padL-8)+'" y="'+(y(g)+3)+'" text-anchor="end" font-family="IBM Plex Mono" font-size="9" fill="#6b7280">'+pplLabel.toLocaleString()+'</text>';});
   let dots="",xlab="";
   fc.forEach((f,i)=>{dots+='<circle cx="'+x(f.h)+'" cy="'+y(f.pct)+'" r="4.5" fill="'+LOADCOLOR(f.pct)+'" stroke="#ffffff" stroke-width="1.5" data-h="'+f.h+'" data-c="'+Math.round(f.count)+'" data-p="'+Math.round(f.pct)+'" class="fcdot" style="cursor:pointer"/>';
     if(i%2===0||i===fc.length-1)xlab+='<text x="'+x(f.h)+'" y="'+(H-8)+'" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#6b7280">'+fmtH(f.h)+'</text>';});
   const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%">'+grid+'<path d="'+area+'" fill="rgba(20,73,168,0.08)"/><path d="'+line+'" fill="none" stroke="#1449a8" stroke-width="2.5"/>'+dots+xlab+'</svg>';
-  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">predicted crowd level · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
+  el.innerHTML='<div class="fc-wrap"><div class="fc-head"><span class="t">Rest of '+DOWFULL[z.now.dow]+'</span><span class="sub">estimated people · tap a point</span></div>'+svg+'<div class="fc-tip" id="fcTip">Tap a point for the estimate.</div></div>';
   el.querySelectorAll('.fcdot').forEach(d=>d.addEventListener('click',()=>{
     const h=+d.dataset.h,ppl=+d.dataset.c,p=+d.dataset.p;
     const lbl=p<25?"quiet":p<50?"moderate":p<75?"busy":"packed";
