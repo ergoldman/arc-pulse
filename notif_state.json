@@ -23,6 +23,8 @@
     "ARC Access": {
       "opening_sent": true
     },
-    "Recreation Pool": {}
+    "Recreation Pool": {
+      "closing_sent": true
+    }
   }
 }
