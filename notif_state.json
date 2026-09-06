@@ -22,7 +22,9 @@
     }
   },
   "2026-09-06": {
-    "ARC Access": {},
+    "ARC Access": {
+      "opening_sent": true
+    },
     "Recreation Pool": {
       "tomorrow_sent": true
     }
