@@ -1,15 +1,4 @@
 {
-  "2026-09-04": {
-    "ARC Access": {
-      "opening_sent": true,
-      "closing_sent": true
-    },
-    "Recreation Pool": {
-      "tomorrow_sent": true,
-      "opening_sent": true,
-      "closing_sent": true
-    }
-  },
   "2026-09-05": {
     "ARC Access": {
       "opening_sent": true,
@@ -31,5 +20,9 @@
       "opening_sent": true,
       "closing_sent": true
     }
+  },
+  "2026-09-07": {
+    "ARC Access": {},
+    "Recreation Pool": {}
   }
 }
