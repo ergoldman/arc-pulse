@@ -33122,3 +33122,6 @@ timestamp,facility_id,facility_name,current,maximum,remaining,pct_full,page_last
 2026-10-12T14:30:50,26541008-adb9-4943-897b-9eeb4e685e97,ARC Access,323,2500,2177,12.9,7:26 AM,47.7,0.0,0
 2026-10-12T14:30:50,4990212a-d51b-4793-bbde-eeeb435b0aa6,Recreation Pool,15,350,335,4.3,7:26 AM,47.7,0.0,0
 2026-10-12T14:30:50,ecd23993-65f6-4f59-9c98-730103abce7b,Rock Wall,16,25,9,64.0,7:26 AM,47.7,0.0,0
+2026-10-12T14:45:43,26541008-adb9-4943-897b-9eeb4e685e97,ARC Access,375,2500,2125,15.0,7:41 AM,,,
+2026-10-12T14:45:43,4990212a-d51b-4793-bbde-eeeb435b0aa6,Recreation Pool,19,350,331,5.4,7:41 AM,,,
+2026-10-12T14:45:43,ecd23993-65f6-4f59-9c98-730103abce7b,Rock Wall,16,25,9,64.0,7:41 AM,,,
