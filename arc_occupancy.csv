@@ -42653,3 +42653,6 @@ timestamp,facility_id,facility_name,current,maximum,remaining,pct_full,page_last
 2026-11-13T08:01:13,26541008-adb9-4943-897b-9eeb4e685e97,ARC Access,1220,2500,1280,48.8,"Thursday, November 12 11:56 PM",,,
 2026-11-13T08:01:13,4990212a-d51b-4793-bbde-eeeb435b0aa6,Recreation Pool,49,350,301,14.0,"Thursday, November 12 11:56 PM",,,
 2026-11-13T08:01:13,ecd23993-65f6-4f59-9c98-730103abce7b,Rock Wall,23,25,2,92.0,"Thursday, November 12 11:56 PM",,,
+2026-11-13T08:16:12,26541008-adb9-4943-897b-9eeb4e685e97,ARC Access,1220,2500,1280,48.8,12:15 AM,,,
+2026-11-13T08:16:12,4990212a-d51b-4793-bbde-eeeb435b0aa6,Recreation Pool,49,350,301,14.0,12:15 AM,,,
+2026-11-13T08:16:12,ecd23993-65f6-4f59-9c98-730103abce7b,Rock Wall,23,25,2,92.0,12:15 AM,,,
