@@ -1,8 +1,8 @@
 {
   "status": "ok",
-  "updated": "2026-11-27T15:16:13Z",
+  "updated": "2026-11-27T15:31:10Z",
   "arc": {
-    "source": "live",
+    "source": "builtin",
     "regular": {
       "weekday": {
         "open": "05:00",
